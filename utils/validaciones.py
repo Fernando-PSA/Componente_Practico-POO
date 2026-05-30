@@ -1,427 +1,379 @@
 import re
 
-
-# =====================================================
-# VALIDAR SI UN CAMPO ESTA VACIO
-# =====================================================
+# =====================================================================
+# FUNCIÓN AUXILIAR DE CONTROL
+# =====================================================================
 def campo_vacio(valor):
-
     return valor is None or str(valor).strip() == ""
 
 
-# =====================================================
-# VALIDAR SOLO LETRAS Y ESPACIOS
-# NO PERMITE:
-# numeros
-# caracteres especiales
-# =====================================================
-def pedir_solo_letras(mensaje):
-
+# =====================================================================
+# VALIDACIÓN: SOLO LETRAS Y ESPACIOS (Nombres, Apellidos, Ciudades)
+# =====================================================================
+def pedir_solo_letras(mensaje, valor_actual=None, permitir_vacio=False):
     while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
+        valor = input(prompt).strip()
 
-        valor = input(mensaje).strip()
+        # Si el usuario presiona Enter para modificar, conserva el valor
+        if valor == "" and valor_actual is not None:
+            return valor_actual
 
+        # Si permitimos vacíos (como en las búsquedas para salir), retornamos el vacío
+        if valor == "" and permitir_vacio:
+            return valor
+
+        # Validación estándar de obligatoriedad
         if campo_vacio(valor):
-            print(
-                "Error. Este campo no puede estar vacío."
-            )
+            print("[❌ ERROR] Este campo es obligatorio y no puede estar vacío.")
             continue
 
-        if not re.fullmatch(
-            r"[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+",
-            valor
-        ):
-            print(
-                "Error. Solo se permiten letras."
-            )
+        # Validación para verificar que sean solo letras y espacios
+        if not valor.replace(" ", "").isalpha():
+            print("[❌ ERROR] Entrada inválida. Solo se permiten letras.")
             continue
 
         return valor
 
 
-# =====================================================
-# VALIDAR TEXTO ALFANUMERICO
-# PERMITE:
-# letras
-# numeros
-# espacios
-#
-# NO PERMITE:
-# caracteres especiales
-# =====================================================
-def pedir_alfanumerico(mensaje):
-
+# =====================================================================
+# VALIDACIÓN: TEXTO ALFANUMÉRICO (Direcciones, Lugares)
+# =====================================================================
+def pedir_alfanumerico(mensaje, valor_actual=None):
     while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        valor = input(prompt).strip()
 
-        valor = input(mensaje).strip()
+        if valor == "" and valor_actual is not None:
+            return valor_actual
 
         if campo_vacio(valor):
-            print(
-                "Error. Este campo no puede estar vacío."
-            )
+            print("[❌ ERROR] Este campo es obligatorio y no puede estar vacío.")
             continue
 
-        if not re.fullmatch(
-            r"[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+",
-            valor
-        ):
-            print(
-                "Error. Solo se permiten letras y números."
-            )
+        if not re.fullmatch(r"[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,#\-]+", valor):
+            print("[❌ ERROR] Entrada inválida. Solo se permiten letras y números.")
             continue
 
-        # Evitar SOLO números
         if valor.isdigit():
-            print(
-                "Error. No puede ingresar únicamente números."
-            )
+            print("[❌ ERROR] No puede ingresar únicamente números.")
             continue
 
         return valor
 
-# =====================================================
-# VALIDAR EMPRESA
-# PERMITE:
-# letras
-# numeros
-# espacios
-# algunos caracteres especiales
-# =====================================================
-# =====================================================
-# VALIDAR EMPRESA
-# =====================================================
-def pedir_empresa(mensaje):
 
+# =====================================================================
+# VALIDACIÓN: NOMBRE DE EMPRESA (Patrocinadores)
+# =====================================================================
+def pedir_empresa(mensaje, valor_actual=None):
     while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        valor = input(prompt).strip()
 
-        valor = input(mensaje).strip()
+        if valor == "" and valor_actual is not None:
+            return valor_actual
 
         if campo_vacio(valor):
-
-            print(
-                "Error. Este campo no puede estar vacío."
-            )
-
+            print("[❌ ERROR] Este campo es obligatorio y no puede estar vacío.")
             continue
 
-        if not re.fullmatch(
-            r"[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,&+_/'’()-]+",
-            valor
-        ):
-
-            print(
-                "Error. Nombre de empresa inválido."
-            )
-
+        if not re.fullmatch(r"[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,&+_/'’()-]+", valor):
+            print("[❌ ERROR] Nombre de empresa inválido.")
             continue
 
-        if not re.search(
-            r"[a-zA-ZáéíóúÁÉÍÓÚñÑ]",
-            valor
-        ):
-
-            print(
-                "Error. La empresa debe contener al menos una letra."
-            )
-
+        if not re.search(r"[a-zA-ZáéíóúÁÉÍÓÚñÑ]", valor):
+            print("[❌ ERROR] La empresa debe contener al menos una letra.")
             continue
 
         return valor
 
-# =====================================================
-# VALIDAR TELEFONO
-# SOLO NUMEROS
-# EXACTAMENTE 10 DIGITOS
-# =====================================================
-def pedir_telefono(mensaje):
 
+# =====================================================================
+# VALIDACIÓN: TELÉFONO CELULAR (Exactamente 10 dígitos)
+# =====================================================================
+def pedir_telefono(mensaje, valor_actual=None):
     while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        telefono = input(prompt).strip()
 
-        telefono = input(mensaje).strip()
+        if telefono == "" and valor_actual is not None:
+            return valor_actual
+
+        if campo_vacio(telefono):
+            print("[❌ ERROR] El teléfono es un campo requerido.")
+            continue
 
         if not telefono.isdigit():
-
-            print(
-                "Error. El teléfono solo debe contener números."
-            )
-
+            print("[❌ ERROR] El teléfono solo debe contener números.")
             continue
 
         if len(telefono) != 10:
-
-            print(
-                "Error. El teléfono debe tener 10 dígitos."
-            )
-
+            print("[❌ ERROR] El teléfono debe tener exactamente 10 dígitos.")
             continue
 
         return telefono
 
 
-# =====================================================
-# VALIDAR CORREO
-# =====================================================
-def pedir_correo(mensaje):
-
+# =====================================================================
+# VALIDACIÓN: CORREO ELECTRÓNICO (Formato y Unicidad Inteligente)
+# =====================================================================
+def pedir_correo(mensaje, valor_actual=None, repo=None, coleccion=None, id_registro=None):
     while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        correo = input(prompt).strip()
 
-        correo = input(mensaje).strip()
+        if correo == "" and valor_actual is not None:
+            return valor_actual
 
         if campo_vacio(correo):
-
-            print(
-                "Error. El correo no puede estar vacío."
-            )
-
+            print("[❌ ERROR] El correo electrónico no puede estar vacío.")
             continue
 
         patron = r"^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$"
-
         if not re.fullmatch(patron, correo):
-
-            print(
-                "Error. Ingrese un correo válido."
-            )
-
+            print("[❌ ERROR] Ingrese un formato de correo válido (ejemplo@dominio.com).")
             continue
+
+        if repo and coleccion:
+            existente = repo.buscar_por_campo(coleccion, "correo", correo)
+            if existente and (id_registro is None or existente.get("id") != id_registro):
+                print(f"[❌ ERROR] El correo '{correo}' ya está registrado por otro usuario.")
+                continue
 
         return correo
 
 
-# =====================================================
-# VALIDAR ENTERO
-# SOLO NUMEROS ENTEROS
-# =====================================================
-def pedir_entero(mensaje):
-
+# =====================================================================
+# VALIDACIÓN: NÚMEROS ENTEROS
+# =====================================================================
+def pedir_entero(mensaje, valor_actual=None):
     while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        valor = input(prompt).strip()
 
-        valor = input(mensaje).strip()
+        if valor == "" and valor_actual is not None:
+            return int(valor_actual)
+
+        if campo_vacio(valor):
+            print("[❌ ERROR] Debe ingresar un número entero.")
+            continue
 
         if not valor.isdigit():
-
-            print(
-                "Error. Solo se permiten números enteros."
-            )
-
+            print("[❌ ERROR] Entrada inválida. Solo se permiten números enteros.")
             continue
 
         return int(valor)
 
 
 # =====================================================
-# VALIDAR ENTERO POSITIVO
+# VALIDAR ENTERO POSITIVO GENÉRICO
 # =====================================================
-def pedir_entero_positivo(mensaje):
-
+def pedir_entero_positivo(mensaje, valor_actual=None):
     while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        valor = input(prompt).strip()
 
-        valor = pedir_entero(mensaje)
+        if valor == "" and valor_actual is not None:
+            return int(valor_actual)
 
-        if valor <= 0:
-
-            print(
-                "Error. Debe ingresar un número mayor a cero."
-            )
-
+        if campo_vacio(valor):
+            print("[❌ ERROR] Este campo es obligatorio.")
             continue
 
-        return valor
-
-
-# =====================================================
-# VALIDAR EDAD
-# ENTRE 20 Y 100
-# =====================================================
-def pedir_edad(mensaje):
-
-    while True:
-
-        edad = input(mensaje).strip()
-
-        if not edad.isdigit():
-
-            print(
-                "Error. La edad solo debe contener números."
-            )
-
+        if not valor.isdigit():
+            print("[❌ ERROR] Entrada inválida. Solo se permiten números enteros puros.")
             continue
 
-        edad = int(edad)
+        num = int(valor)
+        if num <= 0:
+            print("[❌ ERROR] El valor debe ser un número entero mayor a cero.")
+            continue
 
+        return num
+
+
+# =====================================================
+# VALIDAR CAPACIDAD MÁXIMA DEL VENUE
+# =====================================================
+def pedir_capacidad_venue(mensaje, valor_actual=None):
+    while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        valor = input(prompt).strip()
+
+        if valor == "" and valor_actual is not None:
+            return int(valor_actual)
+
+        if campo_vacio(valor):
+            print("[❌ ERROR] Este campo es obligatorio.")
+            continue
+
+        if not valor.isdigit():
+            print("[❌ ERROR] Entrada inválida. Solo se permiten números enteros.")
+            continue
+
+        num = int(valor)
+        if num < 100:
+            print("[❌ ERROR] Capacidad inválida. Un venue debe tener una capacidad mínima de 100 personas.")
+            continue
+
+        return num
+
+
+# =====================================================
+# VALIDAR APORTE ECONÓMICO DEL PATROCINADOR
+# =====================================================
+def pedir_aporte_economico(mensaje, valor_actual=None):
+    while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        valor = input(prompt).strip()
+
+        if valor == "" and valor_actual is not None:
+            return int(valor_actual)
+
+        if campo_vacio(valor):
+            print("[❌ ERROR] El aporte económico es obligatorio.")
+            continue
+
+        if not valor.isdigit():
+            print("[❌ ERROR] Entrada inválida. Solo se permiten números enteros sin decimales.")
+            continue
+
+        num = int(valor)
+        if num <= 10000:
+            print("[❌ ERROR] Monto inválido. El aporte mínimo de un patrocinador debe ser de $10000.")
+            continue
+
+        return num
+
+
+# =====================================================================
+# VALIDACIÓN: EDAD (Entre 20 y 100)
+# =====================================================================
+def pedir_edad(mensaje, valor_actual=None):
+    while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        valor = input(prompt).strip()
+
+        if valor == "" and valor_actual is not None:
+            return int(valor_actual)
+
+        if campo_vacio(valor):
+            print("[❌ ERROR] La edad es obligatoria.")
+            continue
+
+        if not valor.isdigit():
+            print("[❌ ERROR] La edad solo debe contener números.")
+            continue
+
+        edad = int(valor)
         if edad < 20 or edad > 100:
-
-            print(
-                "Error. La edad debe estar entre 20 y 100 años."
-            )
-
+            print("[❌ ERROR] La edad debe estar en el rango de 20 a 100 años.")
             continue
 
         return edad
 
 
-# =====================================================
-# VALIDAR FECHA
-# FORMATOS:
-# dd/mm/yyyy
-# dd-mm-yyyy
-# =====================================================
-def pedir_fecha(mensaje):
-
+# =====================================================================
+# VALIDAR FECHA (UNIFICADA Y CORREGIDA: Acepta d/m/yyyy y dd/mm/yyyy)
+# =====================================================================
+def pedir_fecha(mensaje, valor_actual=None):
     while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
+        fecha = input(prompt).strip()
 
-        fecha = input(mensaje).strip()
+        if fecha == "" and valor_actual is not None:
+            return valor_actual
 
-        patron = r"^(\d{2})([/\-])(\d{2})\2(\d{4})$"
+        if campo_vacio(fecha):
+            print("[❌ ERROR] La fecha es obligatoria y no puede estar vacía.")
+            continue
 
+        # Expresión elástica: permite 1 o 2 dígitos para día y mes, obligatoriamente con barras '/'
+        patron = r"^(\d{1,2})/(\d{1,2})/(\d{4})$"
         resultado = re.match(patron, fecha)
 
         if not resultado:
-
-            print(
-                "Error. Formato inválido. "
-                "Use dd/mm/yyyy o dd-mm-yyyy."
-            )
-
+            print("[❌ ERROR] Formato inválido. Debe usar barras estrictamente (dd/mm/yyyy).")
             continue
 
         dia = int(resultado.group(1))
-        mes = int(resultado.group(3))
-        anio = int(resultado.group(4))
-
-        if dia < 1 or dia > 31:
-
-            print(
-                "Error. Día inválido."
-            )
-
-            continue
+        mes = int(resultado.group(2))
+        anio = int(resultado.group(3))
 
         if mes < 1 or mes > 12:
+            print("[❌ ERROR] Mes inválido (debe estar entre 1 y 12).")
+            continue
 
-            print(
-                "Error. Mes inválido."
-            )
-
+        if dia < 1 or dia > 31:
+            print("[❌ ERROR] Día inválido para el calendario.")
             continue
 
         if anio < 2026:
-
-            print(
-                "Error. El año debe ser 2026 o superior."
-            )
-
+            print("[❌ ERROR] El año ingresado debe ser 2026 o superior.")
             continue
 
         return fecha
-    
-def validar_fecha(fecha):
-
-    patron = r"^(\d{1,2})([/\-])(\d{1,2})\2(\d{4})$"
-
-    resultado = re.match(patron, fecha)
-
-    if not resultado:
-        return False
-
-    dia = int(resultado.group(1))
-    mes = int(resultado.group(3))
-    anio = int(resultado.group(4))
-
-    if dia < 1 or dia > 31:
-        return False
-
-    if mes < 1 or mes > 12:
-        return False
-
-    if anio < 2026:
-        return False
-
-    return True
 
 
-# =====================================================
-# VALIDAR CEDULA ECUATORIANA
-# =====================================================
+# =====================================================================
+# VALIDACIÓN ALGORÍTMICA: CÉDULA ECUATORIANA
+# =====================================================================
 def validar_cedula_ecuatoriana(cedula):
-
     if len(cedula) != 10 or not cedula.isdigit():
         return False
 
     provincia = int(cedula[:2])
-
     if provincia < 1 or provincia > 24:
         return False
 
     tercer_digito = int(cedula[2])
-
     if tercer_digito >= 6:
         return False
 
     suma = 0
-
     for i in range(9):
-
         numero = int(cedula[i])
-
         if i % 2 == 0:
-
             numero *= 2
-
             if numero > 9:
                 numero -= 9
-
         suma += numero
 
-    digito_verificador = (
-        10 - (suma % 10)
-    ) % 10
-
+    digito_verificador = (10 - (suma % 10)) % 10
     return digito_verificador == int(cedula[9])
 
 
-# =====================================================
-# PEDIR CEDULA
-# =====================================================
-def pedir_cedula(mensaje):
-
+# =====================================================================
+# VALIDACIÓN: CONTROL DE ENTRADA DE CÉDULA Y UNICIDAD
+# =====================================================================
+def pedir_cedula(mensaje, valor_actual=None, repo=None, coleccion=None, id_registro=None):
     while True:
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        cedula = input(prompt).strip()
 
-        cedula = input(mensaje).strip()
+        if cedula == "" and valor_actual is not None:
+            return valor_actual
 
         if campo_vacio(cedula):
-
-            print(
-                "Error. La cédula no puede estar vacía."
-            )
-
+            print("[❌ ERROR] La cédula es un campo requerido.")
             continue
 
         if not validar_cedula_ecuatoriana(cedula):
-
-            print(
-                "Error. La cédula ecuatoriana no es válida."
-            )
-
+            print("[❌ ERROR] La cédula ingresada no es una cédula ecuatoriana válida.")
             continue
+
+        if repo and coleccion:
+            existente = repo.buscar_por_campo(coleccion, "cedula", cedula)
+            if existente and (id_registro is None or existente.get("id") != id_registro):
+                print("[❌ ERROR] Ya existe un registro activo con este número de cédula.")
+                continue
 
         return cedula
 
 
-# =====================================================
-# VALIDAR CODIGO UNICO
-# =====================================================
-def validar_codigo_unico(
-    repo,
-    coleccion,
-    campo,
-    valor
-):
-
-    existente = repo.buscar_por_campo(
-        coleccion,
-        campo,
-        valor
-    )
-
+# =====================================================================
+# VALIDACIÓN: CONTROL DE CÓDIGOS DE TICKETS ÚNICOS
+# =====================================================================
+def validar_codigo_unico(repo, coleccion, campo, valor):
+    existente = repo.buscar_por_campo(coleccion, campo, valor)
     return existente is None

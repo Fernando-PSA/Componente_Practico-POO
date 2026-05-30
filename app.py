@@ -8,15 +8,15 @@ from services.evento_service import EventoService
 from services.entrada_service import EntradaService
 
 
-# =========================================
-# CONEXION CON EL ARCHIVO JSON
-# =========================================
+# =====================================================
+# CONEXIÓN CON EL ARCHIVO JSON (PERSISTENCIA)
+# =====================================================
 repo = RepoJson("data/db.json")
 
 
-# =========================================
-# INSTANCIAS DE LOS SERVICES
-# =========================================
+# =====================================================
+# INSTANCIAS DE LOS SERVICIOS DE CAPA DE NEGOCIO
+# =====================================================
 organizador_service = OrganizadorService(repo)
 venue_service = VenueService(repo)
 patrocinador_service = PatrocinadorService(repo)
@@ -25,15 +25,12 @@ evento_service = EventoService(repo)
 entrada_service = EntradaService(repo)
 
 
-# =========================================
-# MENU ORGANIZADORES
-# =========================================
+# =====================================================
+# SUBMENÚ: ORGANIZADORES
+# =====================================================
 def menu_organizadores():
-
     opcion = ""
-
     while opcion != "0":
-
         print("\n========== MENÚ ORGANIZADORES ==========")
         print("1. Registrar organizador")
         print("2. Listar organizadores")
@@ -41,36 +38,28 @@ def menu_organizadores():
         print("4. Eliminar organizador")
         print("0. Volver al menú principal")
 
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
             organizador_service.registrar()
-
         elif opcion == "2":
             organizador_service.listar()
-
         elif opcion == "3":
             organizador_service.modificar()
-
         elif opcion == "4":
             organizador_service.eliminar()
-
         elif opcion == "0":
-            print("Volviendo al menú principal...")
-
+            print("[ℹ INFO] Volviendo al menú principal...")
         else:
-            print("Opción incorrecta.")
+            print("[❌ ERROR] Opción incorrecta. Ingrese un número del menú.")
 
 
-# =========================================
-# MENU VENUES
-# =========================================
+# =====================================================
+# SUBMENÚ: VENUES (LUGARES)
+# =====================================================
 def menu_venues():
-
     opcion = ""
-
     while opcion != "0":
-
         print("\n========== MENÚ VENUES ==========")
         print("1. Registrar venue")
         print("2. Listar venues")
@@ -78,36 +67,28 @@ def menu_venues():
         print("4. Eliminar venue")
         print("0. Volver al menú principal")
 
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
             venue_service.registrar()
-
         elif opcion == "2":
             venue_service.listar()
-
         elif opcion == "3":
             venue_service.modificar()
-
         elif opcion == "4":
             venue_service.eliminar()
-
         elif opcion == "0":
-            print("Volviendo al menú principal...")
-
+            print("[ℹ INFO] Volviendo al menú principal...")
         else:
-            print("Opción incorrecta.")
+            print("[❌ ERROR] Opción incorrecta. Ingrese un número del menú.")
 
 
-# =========================================
-# MENU PATROCINADORES
-# =========================================
+# =====================================================
+# SUBMENÚ: PATROCINADORES
+# =====================================================
 def menu_patrocinadores():
-
     opcion = ""
-
     while opcion != "0":
-
         print("\n========== MENÚ PATROCINADORES ==========")
         print("1. Registrar patrocinador")
         print("2. Listar patrocinadores")
@@ -115,36 +96,28 @@ def menu_patrocinadores():
         print("4. Eliminar patrocinador")
         print("0. Volver al menú principal")
 
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
             patrocinador_service.registrar()
-
         elif opcion == "2":
             patrocinador_service.listar()
-
         elif opcion == "3":
             patrocinador_service.modificar()
-
         elif opcion == "4":
             patrocinador_service.eliminar()
-
         elif opcion == "0":
-            print("Volviendo al menú principal...")
-
+            print("[ℹ INFO] Volviendo al menú principal...")
         else:
-            print("Opción incorrecta.")
+            print("[❌ ERROR] Opción incorrecta. Ingrese un número del menú.")
 
 
-# =========================================
-# MENU ASISTENTES
-# =========================================
+# =====================================================
+# SUBMENÚ: ASISTENTES
+# =====================================================
 def menu_asistentes():
-
     opcion = ""
-
     while opcion != "0":
-
         print("\n========== MENÚ ASISTENTES ==========")
         print("1. Registrar asistente")
         print("2. Listar asistentes")
@@ -152,106 +125,92 @@ def menu_asistentes():
         print("4. Eliminar asistente")
         print("0. Volver al menú principal")
 
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
             asistente_service.registrar()
-
         elif opcion == "2":
             asistente_service.listar()
-
         elif opcion == "3":
             asistente_service.modificar()
-
         elif opcion == "4":
             asistente_service.eliminar()
-
         elif opcion == "0":
-            print("Volviendo al menú principal...")
-
+            print("[ℹ INFO] Volviendo al menú principal...")
         else:
-            print("Opción incorrecta.")
+            print("[❌ ERROR] Opción incorrecta. Ingrese un número del menú.")
 
 
-# =========================================
-# MENU EVENTOS
-# =========================================
+# =====================================================
+# SUBMENÚ: EVENTOS (Incluye operaciones de consulta)
+# =====================================================
 def menu_eventos():
-
     opcion = ""
-
     while opcion != "0":
-
         print("\n========== MENÚ EVENTOS ==========")
         print("1. Registrar evento")
         print("2. Listar eventos")
         print("3. Modificar evento")
         print("4. Eliminar evento")
+        print("5. Reporte: Ver ingresos financieros por evento (Entradas + Patrocinios)")
+        print("6. Consulta: Filtrar eventos (Por ciudad o rango de fechas)")
         print("0. Volver al menú principal")
 
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
             evento_service.registrar()
-
         elif opcion == "2":
             evento_service.listar()
-
         elif opcion == "3":
             evento_service.modificar()
-
         elif opcion == "4":
             evento_service.eliminar()
-
+        elif opcion == "5":
+            evento_service.ingresos_por_evento()  # Operación adicional de Ingresos
+        elif opcion == "6":
+            evento_service.filtrar_eventos()       # Operación adicional de Filtrado
         elif opcion == "0":
-            print("Volviendo al menú principal...")
-
+            print("[ℹ INFO] Volviendo al menú principal...")
         else:
-            print("Opción incorrecta.")
+            print("[❌ ERROR] Opción incorrecta. Ingrese un número del menú.")
 
 
-# =========================================
-# MENU ENTRADAS
-# =========================================
+# =====================================================
+# SUBMENÚ: ENTRADAS (Incluye ordenamiento de asistentes)
+# =====================================================
 def menu_entradas():
-
     opcion = ""
-
     while opcion != "0":
-
         print("\n========== MENÚ ENTRADAS ==========")
-        print("1. Emitir entrada")
-        print("2. Listar entradas")
-        print("3. Cancelar entrada")
+        print("1. Emitir nueva entrada (Control de Aforo)")
+        print("2. Listar todas las entradas emitidas")
+        print("3. Cancelar/Anular entrada existente")
+        print("4. Reporte: Listar asistentes ordenados (Por apellido o código)")
         print("0. Volver al menú principal")
 
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
             entrada_service.registrar()
-
         elif opcion == "2":
             entrada_service.listar()
-
         elif opcion == "3":
             entrada_service.eliminar()
-
+        elif opcion == "4":
+            entrada_service.listar_asistentes_ordenada() # Operación adicional de Ordenamiento
         elif opcion == "0":
-            print("Volviendo al menú principal...")
-
+            print("[ℹ INFO] Volviendo al menú principal...")
         else:
-            print("Opción incorrecta.")
+            print("[❌ ERROR] Opción incorrecta. Ingrese un número del menú.")
 
 
-# =========================================
-# MENU PRINCIPAL
-# =========================================
+# =====================================================
+# MENÚ PRINCIPAL DEL SISTEMA
+# =====================================================
 def menu_principal():
-
     opcion = ""
-
     while opcion != "0":
-
         print("\n========== SISTEMA GESTIÓN DE EVENTOS ==========")
         print("1. Gestión de organizadores")
         print("2. Gestión de venues")
@@ -259,36 +218,30 @@ def menu_principal():
         print("4. Gestión de asistentes")
         print("5. Gestión de eventos")
         print("6. Gestión de entradas")
-        print("0. Salir")
+        print("0. Salir del programa")
 
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
             menu_organizadores()
-
         elif opcion == "2":
             menu_venues()
-
         elif opcion == "3":
             menu_patrocinadores()
-
         elif opcion == "4":
             menu_asistentes()
-
         elif opcion == "5":
             menu_eventos()
-
         elif opcion == "6":
             menu_entradas()
-
         elif opcion == "0":
-            print("Saliendo del sistema...")
-
+            print("[ℹ INFO] Saliendo del sistema de gestión. ¡Hasta pronto!")
         else:
-            print("Opción incorrecta.")
+            print("[❌ ERROR] Opción incorrecta. Seleccione una opción válida de la lista.")
 
 
-# =========================================
-# INICIO DEL SISTEMA
-# =========================================
-menu_principal()
+# =====================================================
+# ENTRADA DE EJECUCIÓN PRINCIPAL
+# =====================================================
+if __name__ == "__main__":
+    menu_principal()

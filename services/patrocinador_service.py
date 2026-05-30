@@ -1,8 +1,13 @@
-import re
-
 from models.patrocinador import Patrocinador
 from utils.generador_id import generar_id_secuencial
-from utils.validaciones import pedir_empresa, pedir_telefono, pedir_entero_positivo, pedir_entero
+# Importamos las utilidades de validación correspondientes
+from utils.validaciones import (
+    pedir_empresa, 
+    pedir_telefono, 
+    pedir_entero_positivo, 
+    pedir_entero,
+    pedir_aporte_economico
+)
 
 
 class PatrocinadorService:
@@ -11,19 +16,19 @@ class PatrocinadorService:
     def __init__(self, repo):
         self.repo = repo
 
-    # Metodo para registrar patrocinadores
+    # =====================================================================
+    # C - CREAR (Registrar Patrocinador)
+    # =====================================================================
     def registrar(self):
         print("\n--- REGISTRAR PATROCINADOR ---")
 
+        # Invocamos las validaciones obligatorias de registro
         empresa = pedir_empresa("Empresa: ")
         telefono = pedir_telefono("Teléfono: ")
-        aporte = pedir_entero_positivo("Aporte económico: ")
+        aporte = pedir_aporte_economico("Aporte económico: ")
 
-        # Obtener patrocinadores registrados
-        patrocinadores = self.repo.listar(
-            "patrocinadores",
-            solo_activos=False
-        )
+        # Obtener patrocinadores registrados para el ID autoincremental
+        patrocinadores = self.repo.listar("patrocinadores", solo_activos=False)
 
         # Crear objeto Patrocinador
         patrocinador = Patrocinador(
@@ -34,19 +39,20 @@ class PatrocinadorService:
             True
         )
 
-        # Guardar patrocinador
+        # Guardar patrocinador en persistencia JSON
         self.repo.guardar("patrocinadores", patrocinador.convertir_a_diccionario())
+        print("[✔ ÉXITO] Patrocinador registrado correctamente.")
 
-        print("Patrocinador registrado correctamente.")
-
-    # Metodo para listar patrocinadores
+    # =====================================================================
+    # R - LEER (Listar Patrocinadores)
+    # =====================================================================
     def listar(self):
         print("\n--- LISTADO DE PATROCINADORES ---")
 
         patrocinadores = self.repo.listar("patrocinadores")
 
         if len(patrocinadores) == 0:
-            print("No existen patrocinadores registrados.")
+            print("[ℹ INFO] No existen patrocinadores registrados.")
             return
 
         for patrocinador in patrocinadores:
@@ -57,76 +63,25 @@ class PatrocinadorService:
                 f"Aporte: ${patrocinador['aporte']}"
             )
 
-    # Metodo para modificar patrocinadores
+    # =====================================================================
+    # U - ACTUALIZAR (Modificar Patrocinador)
+    # =====================================================================
     def modificar(self):
         print("\n--- MODIFICAR PATROCINADOR ---")
 
-        while True:
-            id_patrocinador = pedir_entero("Ingrese el ID del patrocinador a modificar: ")
+        id_patrocinador = pedir_entero("Ingrese el ID del patrocinador a modificar: ")
+        patrocinador = self.repo.buscar_por_id("patrocinadores", id_patrocinador)
 
-            patrocinador = self.repo.buscar_por_id("patrocinadores", id_patrocinador)
+        if patrocinador is None:
+            print("[❌ ERROR] No existe un patrocinador activo con ese ID.")
+            return
 
-            if patrocinador is None:
-                print("Error. No existe un patrocinador activo con ese ID.")
+        print("Deje vacío un campo si no desea modificarlo (Presione Enter).")
 
-                continue
-
-            break
-
-        print("Deje vacío un campo si no desea modificarlo.")
-
-        while True:
-            nueva_empresa = input(f"Empresa actual ({patrocinador['empresa']}): ").strip()
-
-            if nueva_empresa == "":
-                nueva_empresa = patrocinador["empresa"]
-                break
-
-            if not re.fullmatch(r"[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,&+_/'’()-]+",nueva_empresa):
-                print("Error. Nombre de empresa inválido.")
-                continue
-            
-            if not re.search(r"[a-zA-ZáéíóúÁÉÍÓÚñÑ]", nueva_empresa):
-                print("Error. La empresa debe contener al menos una letra.")
-                continue
-
-            break
-
-        while True:
-            nuevo_telefono = input(f"Teléfono actual ({patrocinador['telefono']}): ").strip()
-
-            if nuevo_telefono == "":
-                nuevo_telefono = patrocinador["telefono"]
-                break
-
-            if not nuevo_telefono.isdigit():
-                print("Error. El teléfono solo debe contener números.")
-                continue
-
-            if len(nuevo_telefono) != 10:
-                print("Error. El teléfono debe tener 10 dígitos.")
-                continue
-
-            break
-
-        while True:
-            nuevo_aporte = input(f"Aporte actual ({patrocinador['aporte']}): ").strip()
-
-            if nuevo_aporte == "":
-                nuevo_aporte = patrocinador["aporte"]
-                break
-
-            if not nuevo_aporte.isdigit():
-                print("Error. El aporte solo permite números enteros.")
-                continue
-
-            nuevo_aporte = int(nuevo_aporte)
-
-            if nuevo_aporte <= 0:
-                print("Error. El aporte debe ser mayor a 0.")
-                continue
-
-            break
+        # Invocamos las funciones pasando 'valor_actual' para que actúen en modo Modificación (Opcional)
+        nueva_empresa = pedir_empresa("Empresa nueva", valor_actual=patrocinador['empresa'])
+        nuevo_telefono = pedir_telefono("Teléfono nuevo", valor_actual=patrocinador['telefono'])
+        nuevo_aporte = pedir_aporte_economico("Aporte nuevo", valor_actual=patrocinador['aporte'])
 
         nuevos_datos = {
             "empresa": nueva_empresa,
@@ -135,15 +90,12 @@ class PatrocinadorService:
             "estado": True
         }
 
-        self.repo.actualizar(
-            "patrocinadores",
-            id_patrocinador,
-            nuevos_datos
-        )
+        self.repo.actualizar("patrocinadores", id_patrocinador, nuevos_datos)
+        print("[✔ ÉXITO] Patrocinador modificado correctamente.")
 
-        print("Patrocinador modificado correctamente.")
-
-    # Metodo para eliminar patrocinadores
+    # =====================================================================
+    # D - ELIMINAR (Eliminar Patrocinador Lógico)
+    # =====================================================================
     def eliminar(self):
         print("\n--- ELIMINAR PATROCINADOR ---")
 
@@ -152,6 +104,6 @@ class PatrocinadorService:
         eliminado = self.repo.eliminar_logico("patrocinadores", id_patrocinador)
 
         if eliminado:
-            print("Patrocinador eliminado lógicamente.")
+            print("[✔ ÉXITO] Patrocinador eliminado lógicamente.")
         else:
-            print("No se encontró el patrocinador.")
+            print("[❌ ERROR] No se encontró el patrocinador o ya se encuentra inactivo.")

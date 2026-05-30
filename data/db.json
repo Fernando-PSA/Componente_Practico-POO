@@ -2,31 +2,11 @@
     "organizadores": [
         {
             "id": 1,
-            "nombre": "Fernando",
-            "correo": "fpazminos2@gmail.ec",
-            "telefono": "0989200353",
-            "estado": true
-        },
-        {
-            "id": 2,
-            "nombre": "Fernando",
-            "correo": "alex@hotmail.com",
-            "telefono": "0959204462",
-            "estado": true
-        },
-        {
-            "id": 3,
-            "nombre": "Flavio",
-            "correo": "fmoralesp@unemi.edu.ec",
-            "telefono": "0989200353",
-            "estado": true
-        },
-        {
-            "id": 4,
-            "cedula": "fernando",
-            "nombre": "fernando@gmail.com",
-            "correo": "0990205570",
-            "telefono": true,
+            "cedula": "0959420670",
+            "nombres": "Josueph",
+            "apellidos": "Pluas",
+            "correo": "fpazminos2@unemi.edu.ec",
+            "telefono": "7775367357",
             "estado": true
         }
     ],
@@ -54,6 +34,14 @@
             "direccion": "Simon Bolivar y 5 de Junio",
             "capacidad_maxima": 1,
             "estado": true
+        },
+        {
+            "id": 4,
+            "nombre": "City Sall",
+            "ciudad": "Manta",
+            "direccion": "Av. 4 manzanas",
+            "capacidad_maxima": 120,
+            "estado": true
         }
     ],
     "patrocinadores": [
@@ -68,9 +56,9 @@
         {
             "id": 2,
             "nombre": "Flavio",
-            "empresa": "Valorant82",
+            "empresa": "GOD Riot82",
             "telefono": "0989200353",
-            "aporte": 240,
+            "aporte": 11000,
             "estado": true
         },
         {
@@ -79,6 +67,13 @@
             "empresa": "7-Eleven",
             "telefono": "0990205570",
             "aporte": 43,
+            "estado": true
+        },
+        {
+            "id": 4,
+            "empresa": "Chili's",
+            "telefono": "0990205570",
+            "aporte": 10000,
             "estado": true
         }
     ],
@@ -118,6 +113,15 @@
             "correo": "epazminos@gmail.com",
             "direccion": "5 esquina",
             "estado": true
+        },
+        {
+            "id": 5,
+            "cedula": "0959420670",
+            "nombres": "Julio Vera España",
+            "apellidos": "Garcia Discriminador",
+            "correo": "alexpc@unemi.ex.edu",
+            "direccion": "Cooperativa los olvid4dos de Jesucristo",
+            "estado": true
         }
     ],
     "eventos": [
@@ -135,10 +139,23 @@
             "id": 2,
             "nombre": "Olimpiadas",
             "ciudad": "Manta",
-            "fecha": "23-11-2026",
+            "fecha": "23/11/2026",
             "capacidad_maxima": 182,
             "organizador_id": 1,
             "venue_id": 2,
+            "estado": true
+        },
+        {
+            "id": 3,
+            "nombre": "festival software",
+            "ciudad": "Babahoyo",
+            "fecha": "20/04/2028",
+            "capacidad_maxima": 500,
+            "organizador_id": 1,
+            "venue_id": 1,
+            "patrocinadores_ids": [
+                3
+            ],
             "estado": true
         }
     ],
@@ -149,7 +166,7 @@
             "evento_id": 1,
             "asistente_id": 1,
             "precio": 12,
-            "estado": true
+            "estado": false
         },
         {
             "id": 2,
@@ -166,6 +183,46 @@
             "asistente_id": 2,
             "precio": 20,
             "estado": false
+        },
+        {
+            "id": 4,
+            "codigo": 1237,
+            "evento_id": 1,
+            "asistente_id": 1,
+            "precio": 23,
+            "estado": true
+        },
+        {
+            "id": 5,
+            "codigo": 1287,
+            "evento_id": 1,
+            "asistente_id": 1,
+            "precio": 23,
+            "estado": true
+        },
+        {
+            "id": 6,
+            "codigo": "TICK-1-6",
+            "evento_id": 1,
+            "asistente_id": 1,
+            "precio": 12,
+            "estado": true
+        },
+        {
+            "id": 7,
+            "codigo": "TICK-1-7",
+            "evento_id": 1,
+            "asistente_id": 1,
+            "precio": 12,
+            "estado": true
+        },
+        {
+            "id": 8,
+            "codigo": "TICK-1-8",
+            "evento_id": 1,
+            "asistente_id": 1,
+            "precio": 12,
+            "estado": true
         }
     ]
 }

@@ -1,8 +1,9 @@
 class Organizador:
-    def __init__(self, id, cedula, nombre, correo, telefono, estado=True):
+    def __init__(self, id, cedula, nombres, apellidos, correo, telefono, estado=True):
         self.id = id
         self.cedula = cedula
-        self.nombre = nombre
+        self.nombres = nombres
+        self.apellidos = apellidos
         self.correo = correo
         self.telefono = telefono
         self.estado = estado
@@ -11,7 +12,8 @@ class Organizador:
         return {
             "id": self.id,
             "cedula": self.cedula,
-            "nombre": self.nombre,
+            "nombres": self.nombres,
+            "apellidos": self.apellidos,
             "correo": self.correo,
             "telefono": self.telefono,
             "estado": self.estado

@@ -1,45 +1,37 @@
-import re
-
 from models.venue import Venue
 from utils.generador_id import generar_id_secuencial
-from utils.validaciones import pedir_alfanumerico, pedir_solo_letras, pedir_entero_positivo, pedir_entero
+# Importamos las utilidades de validación correspondientes
+from utils.validaciones import (
+    pedir_solo_letras,
+    pedir_alfanumerico,
+    pedir_capacidad_venue,
+    pedir_entero
+)
 
 
 class VenueService:
 
-    # Constructor de la clase
     def __init__(self, repo):
         self.repo = repo
 
-    # Metodo para registrar un venue
+    # =====================================================================
+    # C - CREAR (Registrar Venue / Lugar)
+    # =====================================================================
     def registrar(self):
-        print("\n--- REGISTRAR VENUE ---")
-
-        while True:
-            nombre = pedir_alfanumerico("Nombre del venue: ")
-
-            existente = self.repo.buscar_por_campo(
-                "venues",
-                "nombre",
-                nombre
-            )
-
-            if existente:
-                print("Ya existe un venue con ese nombre.")
-                continue
-
-            break
+        print("\n--- REGISTRAR VENUE (LUGAR) ---")
         
+        # Delegamos el control de formato y obligatoriedad a validaciones.py
+        nombre = pedir_solo_letras("Nombre del lugar (Venue): ")
         ciudad = pedir_solo_letras("Ciudad: ")
         direccion = pedir_alfanumerico("Dirección: ")
-        capacidad_maxima = pedir_entero_positivo("Capacidad máxima: ")
+        capacidad_maxima = pedir_capacidad_venue("Capacidad máxima de aforo: ")
 
-        # Obtener todos los venues
-        venues = self.repo.listar("venues", solo_activos=False)
+        # Listamos todos para generar el ID secuencial autoincremental desde 1
+        venues_en_db = self.repo.listar("venues", solo_activos=False)
 
-        # Crear objeto Venue
+        # Instancia del modelo de dominio
         venue = Venue(
-            generar_id_secuencial(venues),
+            generar_id_secuencial(venues_en_db),
             nombre,
             ciudad,
             direccion,
@@ -47,19 +39,19 @@ class VenueService:
             True
         )
 
-        # Guardar venue en formato diccionario
+        # Almacenamos en el archivo JSON
         self.repo.guardar("venues", venue.convertir_a_diccionario())
+        print("[✔ ÉXITO] Venue registrado correctamente.")
 
-        print("Venue registrado correctamente.")
-
-    # Metodo para listar venues
+    # =====================================================================
+    # R - LEER (Listar Venues)
+    # =====================================================================
     def listar(self):
-        print("\n--- LISTADO DE VENUES ---")
-
+        print("\n--- LISTADO DE VENUES (LUGARES) ---")
         venues = self.repo.listar("venues")
 
         if len(venues) == 0:
-            print("No existen venues registrados.")
+            print("[ℹ INFO] No existen venues registrados.")
             return
 
         for venue in venues:
@@ -68,134 +60,50 @@ class VenueService:
                 f"Nombre: {venue['nombre']} | "
                 f"Ciudad: {venue['ciudad']} | "
                 f"Dirección: {venue['direccion']} | "
-                f"Capacidad Máxima: {venue['capacidad_maxima']}"
+                f"Capacidad_Maxima: {venue['capacidad_maxima']} personas"
             )
 
-    # Metodo para modificar venues
+    # =====================================================================
+    # U - ACTUALIZAR (Modificar Venue)
+    # =====================================================================
     def modificar(self):
         print("\n--- MODIFICAR VENUE ---")
+        id_venue = pedir_entero("Ingrese el ID del venue a modificar: ")
+        venue = self.repo.buscar_por_id("venues", id_venue)
 
-        while True:
-            id_venue = pedir_entero("Ingrese el ID del venue a modificar: ")
+        if venue is None:
+            print("[❌ ERROR] No existe un venue activo con ese ID.")
+            return
 
-            venue = self.repo.buscar_por_id("venues", id_venue)
+        print("Deje vacío un campo si no desea modificarlo (Presione Enter).")
 
-            if venue is None:
-                print("Error. No existe un venue activo con ese ID.")
-                continue
-
-            break
-
-        print("Deje vacío un campo si no desea modificarlo.")
-
-        while True:
-            nuevo_nombre = input(f"Nombre actual ({venue['nombre']}): ").strip()
-
-            if nuevo_nombre == "":
-                nuevo_nombre = venue["nombre"]
-                break
-
-            if not re.fullmatch(r"[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]+", nuevo_nombre):
-                print("Error. El nombre solo puede contener letras y números.")
-                continue
-            
-            existente = self.repo.buscar_por_campo(
-                "venues",
-                "nombre",
-                nuevo_nombre
-            )
-
-            if existente and existente["id"] != id_venue:
-                print("Ya existe un venue con ese nombre.")
-                continue
-
-            if nuevo_nombre.isdigit():
-                print("Error. El nombre no puede contener solo números.")
-                continue
-
-            break
-
-        while True:
-            nueva_ciudad = input(f"Ciudad actual ({venue['ciudad']}): ").strip()
-
-            if nueva_ciudad == "":
-                nueva_ciudad = venue["ciudad"]
-                break
-
-            if not re.fullmatch(r"[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+", nueva_ciudad):
-                print("Error. La ciudad solo puede contener letras.")
-                continue
-
-            break
-
-        while True:
-            nueva_direccion = input(f"Dirección actual ({venue['direccion']}): ").strip()
-
-            if nueva_direccion == "":
-                nueva_direccion = venue["direccion"]
-                break
-
-            if not re.fullmatch(r"[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]+", nueva_direccion):
-                print("Error. La dirección solo puede contener letras y números.")
-                continue
-
-            if nueva_direccion.isdigit():
-                print("Error. La dirección no puede contener solo números.")
-                continue
-
-            break
-
-        while True:
-            nueva_capacidad = input(f"Capacidad máxima actual ({venue['capacidad_maxima']}): ").strip()
-
-            if nueva_capacidad == "":
-                nueva_capacidad = venue["capacidad_maxima"]
-                break
-
-            if not nueva_capacidad.isdigit():
-                print("Error. La capacidad máxima solo permite números enteros.")
-                continue
-
-            nueva_capacidad = int(nueva_capacidad)
-
-            if nueva_capacidad <= 0:
-                print("Error. La capacidad máxima debe ser mayor a 0.")
-                continue
-
-            break
+        # Al pasarle 'valor_actual', si presiona Enter se mantiene el valor original
+        nuevo_nombre = pedir_solo_letras("Nombre nuevo", valor_actual=venue['nombre'])
+        nueva_ciudad = pedir_solo_letras("Ciudad nueva", valor_actual=venue['ciudad'])
+        nuevo_direccion = pedir_alfanumerico("Dirección nueva", valor_actual=venue['direccion'])
+        nueva_capacidad = pedir_capacidad_venue("Capacidad nueva", valor_actual=venue['capacidad_maxima'])
 
         nuevos_datos = {
             "nombre": nuevo_nombre,
             "ciudad": nueva_ciudad,
-            "direccion": nueva_direccion,
+            "direccion": nuevo_direccion,
             "capacidad_maxima": nueva_capacidad,
             "estado": True
         }
 
-        self.repo.actualizar(
-            "venues",
-            id_venue,
-            nuevos_datos
-        )
+        self.repo.actualizar("venues", id_venue, nuevos_datos)
+        print("[✔ ÉXITO] Venue modificado correctamente.")
 
-        print("Venue modificado correctamente.")
-
-    # Metodo para eliminar venues
+    # =====================================================================
+    # D - ELIMINAR (Eliminar Venue Lógico)
+    # =====================================================================
     def eliminar(self):
         print("\n--- ELIMINAR VENUE ---")
-
         id_venue = pedir_entero("Ingrese el ID del venue a eliminar: ")
-
-        eventos = self.repo.listar("eventos")
-
-        for evento in eventos:
-            if evento["venue_id"] == id_venue:
-                print("No puede eliminar el venue porque está asignado a un evento.")
-                return
 
         eliminado = self.repo.eliminar_logico("venues", id_venue)
 
         if eliminado:
-            print("Venue eliminado lógicamente.")
+            print("[✔ ÉXITO] Venue eliminado lógicamente.")
         else:
-            print("No se encontró el venue.")
+            print("[❌ ERROR] No se encontró el venue o ya se encuentra inactivo.")

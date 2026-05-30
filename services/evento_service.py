@@ -1,9 +1,6 @@
-import re
-
 from models.evento import Evento
 from utils.generador_id import generar_id_secuencial
-from utils.validaciones import pedir_solo_letras, pedir_fecha, pedir_entero, validar_fecha
-
+from utils.validaciones import pedir_solo_letras, pedir_fecha, pedir_entero
 
 class EventoService:
 
@@ -11,154 +8,106 @@ class EventoService:
     def __init__(self, repo):
         self.repo = repo
 
-    # Metodo para registrar eventos
+    # =====================================================================
+    # C - CREAR (Registrar Evento)
+    # =====================================================================
     def registrar(self):
         print("\n--- REGISTRAR EVENTO ---")
 
         while True:
             nombre = pedir_solo_letras("Nombre del evento: ")
-
-            existente = self.repo.buscar_por_campo(
-                "eventos",
-                "nombre",
-                nombre
-            )
-
+            existente = self.repo.buscar_por_campo("eventos", "nombre", nombre)
             if existente:
-                print("Ya existe un evento con ese nombre.")
+                print("[❌ ERROR] Ya existe un evento activo con ese nombre. Ingrese otro.")
                 continue
-
             break
         
         ciudad = pedir_solo_letras("Ciudad: ")
         fecha = pedir_fecha("Fecha del evento: ")
 
-        # ==============================
-        # LISTAR ORGANIZADORES
-        # ==============================
-
+        # -----------------------------------------------------------------
+        # ASIGNACIÓN DE ORGANIZADOR
+        # -----------------------------------------------------------------
         organizadores = self.repo.listar("organizadores")
-
         if len(organizadores) == 0:
-            print("No existen organizadores registrados.")
+            print("[❌ ERROR] No existen organizadores registrados. Debe crear uno primero.")
             return
 
         print("\n--- ORGANIZADORES DISPONIBLES ---")
-
         for organizador in organizadores:
-            print(
-                f"ID: {organizador['id']} | "
-                f"Nombre: {organizador['nombre']} | "
-                f"Correo: {organizador['correo']} | "
-                f"Teléfono: {organizador['telefono']}"
-            )
+            print(f"ID: {organizador['id']} | Nombre: {organizador['nombres']} {organizador['apellidos']} | Correo: {organizador['correo']}")
 
         while True:
             organizador_id = pedir_entero("Seleccione el ID del organizador: ")
-
             organizador = self.repo.buscar_por_id("organizadores", organizador_id)
-
             if organizador is None:
-                print("Error. El organizador no existe.")
+                print("[❌ ERROR] El organizador seleccionado no existe.")
                 continue
-
             break
 
-        # ==============================
-        # LISTAR VENUES
-        # ==============================
+        # -----------------------------------------------------------------
+        # ASIGNACIÓN DE VENUE (LUGAR)
+        # -----------------------------------------------------------------
         venues = self.repo.listar("venues")
-
         if len(venues) == 0:
-            print("No existen venues registrados.")
+            print("[❌ ERROR] No existen venues registrados. Debe crear uno primero.")
             return
 
         print("\n--- VENUES DISPONIBLES ---")
-
         for venue in venues:
-            print(
-                f"ID: {venue['id']} | "
-                f"Nombre: {venue['nombre']} | "
-                f"Ciudad: {venue['ciudad']} | "
-                f"Capacidad Máxima: {venue['capacidad_maxima']}"
-            )
+            print(f"ID: {venue['id']} | Nombre: {venue['nombre']} | Ciudad: {venue['ciudad']} | Capacidad: {venue['capacidad_maxima']}")
 
         while True:
             venue_id = pedir_entero("Seleccione el ID del venue: ")
-
             venue = self.repo.buscar_por_id("venues", venue_id)
-
             if venue is None:
-                print("Error. El venue no existe.")
+                print("[❌ ERROR] El venue seleccionado no existe.")
                 continue
 
+            # Regla de negocio: El lugar debe ser de la misma ciudad del evento
             if venue["ciudad"].lower() != ciudad.lower():
-                print("No se pudo registrar el evento porque el venue no pertenece a la misma ciudad.")
-                print("Regresando al menú de eventos...")
-                return
-
+                print("[❌ ERROR] No se pudo registrar: el venue no pertenece a la misma ciudad del evento.")
+                continue
             break
         
-        # ==============================
-        # LISTAR PATROCINADORES
-        # ==============================
+        # -----------------------------------------------------------------
+        # ASIGNACIÓN DE PATROCINADORES (Varios IDs separados por coma)
+        # -----------------------------------------------------------------
         patrocinadores = self.repo.listar("patrocinadores")
-
         patrocinadores_ids = []
 
         if len(patrocinadores) > 0:
-
             print("\n--- PATROCINADORES DISPONIBLES ---")
-
             for patrocinador in patrocinadores:
-                print(
-                    f"ID: {patrocinador['id']} | "
-                    f"Empresa: {patrocinador['empresa']} | "
-                    f"Aporte: ${patrocinador['aporte']}"
-                )
+                print(f"ID: {patrocinador['id']} | Empresa: {patrocinador['empresa']} | Aporte: ${patrocinador['aporte']}")
 
             ids = input("Ingrese IDs de patrocinadores separados por coma (Enter para ninguno): ").strip()
-
             if ids != "":
                 lista_ids = ids.split(",")
-
                 for id_texto in lista_ids:
-                    
                     if id_texto.strip() == "":
                         continue
-                    
                     try:
                         id_pat = int(id_texto.strip())
-
                         patrocinador = self.repo.buscar_por_id("patrocinadores", id_pat)
-
                         if patrocinador:
-
                             if id_pat not in patrocinadores_ids:
                                 patrocinadores_ids.append(id_pat)
-
                             else:
-                                print(f"El patrocinador ID {id_pat} ya fue agregado.")
-                                
+                                print(f"[ℹ INFO] El patrocinador ID {id_pat} ya fue agregado anteriormente.")
                         else:
-                            print(f"Patrocinador con ID {id_pat} no existe.")
-
+                            print(f"[❌ ERROR] El patrocinador con ID {id_pat} no existe.")
                     except ValueError:
-                        print(f"'{id_texto.strip()}' no es un ID válido.")
+                        print(f"[❌ ERROR] '{id_texto.strip()}' no es un número de ID válido.")
                         
         if len(patrocinadores_ids) == 0:
-            print("Debe seleccionar al menos un patrocinador.")
-            
+            print("[❌ ERROR] Registro denegado: Debe seleccionar al menos un patrocinador para el evento.")
             return
         
-        # La capacidad maxima del evento sera igual
-        # a la capacidad maxima del venue seleccionado
+        # La capacidad del evento se hereda automáticamente del Venue elegido
         capacidad_maxima = venue["capacidad_maxima"]
-
-        # Obtener eventos registrados
         eventos = self.repo.listar("eventos", solo_activos=False)
 
-        # Crear objeto Evento
         evento = Evento(
             generar_id_secuencial(eventos),
             nombre,
@@ -171,233 +120,221 @@ class EventoService:
             True
         )
 
-        # Guardar evento
         self.repo.guardar("eventos", evento.convertir_a_diccionario())
-        print("Evento registrado correctamente.")
+        print("[✔ ÉXITO] Evento registrado y configurado correctamente.")
 
-    # Metodo para listar eventos
+    # =====================================================================
+    # R - LEER (Listar Eventos)
+    # =====================================================================
     def listar(self):
         print("\n--- LISTADO DE EVENTOS ---")
-
         eventos = self.repo.listar("eventos")
 
         if len(eventos) == 0:
-            print("No existen eventos registrados.")
+            print("[ℹ INFO] No existen eventos activos registrados.")
             return
 
         for evento in eventos:
-
             organizador = self.repo.buscar_por_id("organizadores", evento["organizador_id"])
-
             venue = self.repo.buscar_por_id("venues", evento["venue_id"])
 
-            nombre_organizador = (organizador["nombre"] if organizador else "No encontrado")
-
-            nombre_venue = (venue["nombre"] if venue else "No encontrado")
-
-            patrocinadores_texto = "Ninguno"
-
-            if len(evento.get("patrocinadores_ids", [])) > 0:
-
-                empresas = []
-
-                for id_pat in evento.get("patrocinadores_ids", []):
-
-                    patrocinador = self.repo.buscar_por_id("patrocinadores", id_pat)
-
-                    if patrocinador:
-                        empresas.append(patrocinador["empresa"])
-
-                patrocinadores_texto = ", ".join(empresas)
+            nombre_organizador = f"{organizador['nombres']} {organizador['apellidos']}" if organizador else "No encontrado"
+            nombre_venue = venue["nombre"] if venue else "No encontrado"
+            
+            empresas = []
+            for id_pat in evento.get("patrocinadores_ids", []):
+                patrocinador = self.repo.buscar_por_id("patrocinadores", id_pat)
+                if patrocinador:
+                    empresas.append(patrocinador["empresa"])
+            patrocinadores_texto = ", ".join(empresas) if empresas else "Ninguno"
 
             print(
-                f"ID Evento: {evento['id']} | "
+                f"ID: {evento['id']} | "
                 f"Nombre: {evento['nombre']} | "
                 f"Ciudad: {evento['ciudad']} | "
                 f"Fecha: {evento['fecha']} | "
-                f"Capacidad Máxima: {evento['capacidad_maxima']} | "
+                f"Aforo Max: {evento['capacidad_maxima']} | "
                 f"Organizador: {nombre_organizador} | "
                 f"Venue: {nombre_venue} | "
                 f"Patrocinadores: {patrocinadores_texto}"
             )
 
-    # Metodo para modificar eventos
+    # =====================================================================
+    # U - ACTUALIZAR (Modificar Evento - Versión Segura y Consistente)
+    # =====================================================================
     def modificar(self):
         print("\n--- MODIFICAR EVENTO ---")
+        id_evento = pedir_entero("Ingrese el ID del evento a modificar: ")
+        evento = self.repo.buscar_por_id("eventos", id_evento)
 
-        while True:
-            id_evento = pedir_entero("Ingrese el ID del evento a modificar: ")
-
-            evento = self.repo.buscar_por_id("eventos", id_evento)
-
-            if evento is None:
-                print("Error. No existe un evento activo con ese ID.")
-                continue
-
-            break
-
-        print("Deje vacío un campo si no desea modificarlo.")
-
-        while True:
-            nuevo_nombre = input(f"Nombre actual ({evento['nombre']}): ").strip()
-
-            if nuevo_nombre == "":
-                nuevo_nombre = evento["nombre"]
-                break
-
-            if not re.fullmatch(r"[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+", nuevo_nombre):
-                print("Error. El nombre solo permite letras.")
-                continue
-            
-            existente = self.repo.buscar_por_campo("eventos", "nombre", nuevo_nombre)
-
-            if existente and existente["id"] != id_evento:
-                print("Ya existe un evento con ese nombre.")
-                continue
-
-            break
-
-        while True:
-            nueva_ciudad = input(f"Ciudad actual ({evento['ciudad']}): ").strip()
-
-            if nueva_ciudad == "":
-                nueva_ciudad = evento["ciudad"]
-                break
-
-            if not re.fullmatch(r"[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+", nueva_ciudad):
-                print("Error. La ciudad solo permite letras.")
-                continue
-
-            break
-
-        while True:
-            nueva_fecha = input(f"Fecha actual ({evento['fecha']}): ").strip()
-
-            if nueva_fecha == "":
-                nueva_fecha = evento["fecha"]
-                break
-
-            if validar_fecha(nueva_fecha):
-                break
-
-            print("Error. La fecha no es válida, use dd/mm/yyyy o dd-mm-yyyy.")
-
-        venue = self.repo.buscar_por_id("venues", evento["venue_id"])
-
-        if venue["ciudad"].lower() != nueva_ciudad.lower():
-            print("Error. La ciudad del evento debe coincidir con la ciudad del venue asignado.")
+        if evento is None:
+            print("[❌ ERROR] No existe un evento activo con ese ID.")
             return
 
+        print("Deje vacío un campo si no desea modificarlo (Presione Enter).")
+
+        # 1. Modificación del Nombre (Controlando que siga siendo único)
+        while True:
+            nuevo_nombre = pedir_solo_letras("Nombre nuevo", valor_actual=evento['nombre'])
+            if nuevo_nombre == evento['nombre']:
+                break
+            existente = self.repo.buscar_por_campo("eventos", "nombre", nuevo_nombre)
+            if existente and existente["id"] != id_evento:
+                print("[❌ ERROR] Ya existe otro evento registrado con ese nombre.")
+                continue
+            break
+
+        # 2. Modificación de la Fecha (Cumpliendo la regla cronológica de 2026+)
+        nueva_fecha = pedir_fecha("Fecha nueva", valor_actual=evento['fecha'])
+
+        # Preparamos los datos manteniendo la Ciudad y el Estado intactos
         nuevos_datos = {
             "nombre": nuevo_nombre,
-            "ciudad": nueva_ciudad,
+            "ciudad": evento["ciudad"],  # Se conserva el valor estructural original
             "fecha": nueva_fecha,
             "estado": True
         }
 
-        self.repo.actualizar(
-            "eventos",
-            id_evento,
-            nuevos_datos
-        )
+        self.repo.actualizar("eventos", id_evento, nuevos_datos)
+        print("[✔ ÉXITO] Evento modificado correctamente.")
 
-        print("Evento modificado correctamente.")
-
-    # Metodo para eliminar eventos
+    # =====================================================================
+    # D - ELIMINAR (Eliminar Evento Lógico)
+    # =====================================================================
     def eliminar(self):
         print("\n--- ELIMINAR EVENTO ---")
-
         id_evento = pedir_entero("Ingrese el ID del evento a eliminar: ")
 
+        # Regla de negocio: No borrar eventos que ya vendieron entradas
         entradas = self.repo.listar("entradas")
-
         for entrada in entradas:
-
-            if entrada["evento_id"] == id_evento:
-                print("No puede eliminar el evento porque tiene entradas asociadas.")
+            if entrada["evento_id"] == id_evento and entrada["estado"]:
+                print("[❌ ERROR] Denegado: No puede eliminar un evento que ya posee entradas emitidas.")
                 return
 
         eliminado = self.repo.eliminar_logico("eventos", id_evento)
-
         if eliminado:
-            print("Evento eliminado lógicamente.")
+            print("[✔ ÉXITO] Evento eliminado lógicamente.")
         else:
-            print("No se encontró el evento.")
-       
-            
-    def ingresos_por_evento(self):
-        print("\n--- INGRESOS POR EVENTO ---")
+            print("[❌ ERROR] No se encontró el evento o ya está inactivo.")
 
+    # =====================================================================
+    # OP ADICIONAL: Ingresos Totales Por Evento
+    # =====================================================================
+    def ingresos_por_evento(self):
+        print("\n--- REPORTE DE INGRESOS POR EVENTO ---")
         eventos = self.repo.listar("eventos")
 
         if not eventos:
-            print("No hay eventos.")
+            print("[ℹ INFO] No existen eventos para procesar ingresos.")
             return
 
         for evento in eventos:
-
             entradas = self.repo.listar("entradas")
-
             total_entradas = sum(entrada["precio"] for entrada in entradas if entrada["evento_id"] == evento["id"] and entrada["estado"])
 
             patrocinio_total = 0
-
             for id_pat in evento.get("patrocinadores_ids", []):
-
                 patrocinador = self.repo.buscar_por_id("patrocinadores", id_pat)
-
                 if patrocinador:
                     patrocinio_total += patrocinador["aporte"]
 
             total = total_entradas + patrocinio_total
-
             print(
                 f"Evento: {evento['nombre']} | "
-                f"Ingresos entradas: ${total_entradas} | "
+                f"Entradas: ${total_entradas} | "
                 f"Patrocinios: ${patrocinio_total} | "
-                f"TOTAL: ${total}"
+                f"TOTAL GENERADO: ${total}"
             )
-            
-            
+
+    # =====================================================================
+    # OP ADICIONAL: Filtrar Colección por Criterios (Versión Amigable)
+    # =====================================================================
     def filtrar_eventos(self):
         print("\n--- FILTRAR EVENTOS ---")
-
         print("1. Por ciudad")
         print("2. Por rango de fechas")
+        opcion = pedir_entero("Seleccione una opción de filtrado: ")
 
-        opcion = pedir_entero("Seleccione opción: ")
-
-        eventos = self.repo.listar("eventos")
-
+        # Cambiado a False para forzar la lectura completa de db.json en las pruebas
+        eventos = self.repo.listar("eventos", solo_activos=False)
         if not eventos:
-            print("No hay eventos.")
+            print("[ℹ INFO] No existen eventos registrados en el sistema.")
             return
 
+        # -----------------------------------------------------------------
+        # 🏙️ OPCIÓN 1: FILTRADO POR CIUDAD (CON REINTENTO INTERACTIVO)
+        # -----------------------------------------------------------------
         if opcion == 1:
+            print("\n--- BUSCAR EVENTOS POR CIUDAD ---")
+            print("Deje vacío el campo y presione Enter si desea regresar.")
+            
+            while True:
+                ciudad = pedir_solo_letras("Ingrese la ciudad a buscar", permitir_vacio=True)
+                
+                if ciudad == "":
+                    print("[ℹ INFO] Búsqueda cancelada.")
+                    return
 
-            ciudad = pedir_solo_letras("Ingrese ciudad: ")
+                filtrados = [e for e in eventos if e["ciudad"].lower() == ciudad.lower()]
+                
+                if not filtrados:
+                    print(f"[❌ ERROR] No se encontraron eventos registrados en la ciudad de '{ciudad}'.")
+                    print("Por favor, intente con otra ciudad o presione Enter para salir.\n")
+                    continue
+                
+                break
 
-            filtrados = [e for e in eventos if e["ciudad"].lower() == ciudad.lower()]
-
+        # -----------------------------------------------------------------
+        # 📅 OPCIÓN 2: FILTRADO POR RANGO DE FECHAS (TOTALMENTE CORREGIDO)
+        # -----------------------------------------------------------------
         elif opcion == 2:
+            from datetime import datetime
 
-            fecha_inicio = pedir_fecha("Fecha inicio: ")
-            fecha_fin = pedir_fecha("Fecha fin: ")
+            print("\n--- BUSCAR EVENTOS POR RANGO DE FECHAS ---")
+            
+            str_inicio = pedir_fecha("Ingrese la fecha de inicio")
+            str_fin = pedir_fecha("Ingrese la fecha de fin")
 
-            filtrados = [e for e in eventos if fecha_inicio <= e["fecha"] <= fecha_fin]
+            def parsear_fecha(fecha_str):
+                try:
+                    return datetime.strptime(fecha_str, "%d/%m/%Y")
+                except ValueError:
+                    try:
+                        # Procesa perfectamente ingresos flexibles como '1/1/2026'
+                        partes = fecha_str.split("/")
+                        d = int(partes[0])
+                        m = int(partes[1])
+                        a = int(partes[2])
+                        return datetime(a, m, d)
+                    except (ValueError, IndexError):  # ⬅️ Corregido con E mayúscula
+                        return None
 
+            f_inicio = parsear_fecha(str_inicio)
+            f_fin = parsear_fecha(str_fin)
+
+            if not f_inicio or not f_fin:
+                print("[❌ ERROR] Hubo un problema al interpretar las fechas ingresadas.")
+                return
+
+            filtrados = []
+            for e in eventos:
+                fecha_evento = parsear_fecha(e["fecha"])
+                if fecha_evento:
+                    if f_inicio <= fecha_evento <= f_fin:
+                        filtrados.append(e)
+            
+            if not filtrados:
+                print("[ℹ INFO] No se encontraron eventos en el rango de fechas ingresado.")
+                return
+        
         else:
-            print("Opción inválida.")
+            print("[❌ ERROR] Opción de filtrado no válida.")
             return
 
-        if not filtrados:
-            print("No se encontraron eventos.")
-            return
-
+        # -----------------------------------------------------------------
+        # 📊 IMPRESIÓN GLOBAL DE RESULTADOS
+        # -----------------------------------------------------------------
+        print("\n--- RESULTADOS DEL FILTRADO ---")
         for e in filtrados:
-            print(
-                f"ID: {e['id']} | "
-                f"Nombre: {e['nombre']} | "
-                f"Ciudad: {e['ciudad']} | "
-                f"Fecha: {e['fecha']}"
-            )
+            print(f"ID: {e['id']} | Nombre: {e['nombre']} | Ciudad: {e['ciudad']} | Fecha: {e['fecha']} | Aforo: {e['capacidad_maxima']}")
