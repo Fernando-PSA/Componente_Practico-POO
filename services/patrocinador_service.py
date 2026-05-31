@@ -21,8 +21,16 @@ class PatrocinadorService:
     def registrar(self):
         print("\n--- REGISTRAR PATROCINADOR ---")
 
-        # Invocamos las validaciones sin dos puntos manuales para acoplarse a validaciones.py
-        empresa = pedir_empresa("Empresa")
+        # [L-06] Unicidad del nombre de empresa (case-insensitive) para evitar patrocinadores duplicados
+        while True:
+            empresa = pedir_empresa("Empresa")
+            patrocinadores_activos = self.repo.listar("patrocinadores")
+            duplicado = next((p for p in patrocinadores_activos if p["empresa"].lower() == empresa.lower()), None)
+            if duplicado:
+                print(f"[❌ ERROR] Ya existe un patrocinador registrado con la empresa '{empresa}'. Ingrese otro.")
+                continue
+            break
+
         telefono = pedir_telefono("Teléfono")
         aporte = pedir_aporte_economico("Aporte económico")
 
@@ -128,6 +136,12 @@ class PatrocinadorService:
                 if id_patrocinador in evento.get("patrocinadores_ids", []):
                     print("[❌ ERROR] No se puede eliminar este patrocinador porque está asignado a eventos activos.")
                     return
+
+            # [L-12] Confirmación explícita antes de ejecutar la eliminación lógica
+            confirmacion = input(f"¿Confirma eliminar al patrocinador '{patrocinador['empresa']}'? (s/n): ").strip().lower()
+            if confirmacion != "s":
+                print("[ℹ INFO] Operación cancelada por el usuario.")
+                return
 
             eliminado = self.repo.eliminar_logico("patrocinadores", id_patrocinador)
 

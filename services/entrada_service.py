@@ -62,6 +62,14 @@ class EntradaService:
                 continue
             break
 
+        # [L-04] Verifica que el asistente no tenga ya una entrada activa para este evento
+        #         para evitar que un mismo asistente consuma múltiples cupos del mismo evento
+        entradas_existentes = self.repo.listar("entradas")
+        ya_tiene = [e for e in entradas_existentes if e["evento_id"] == id_evento and e["asistente_id"] == id_asistente]
+        if ya_tiene:
+            print(f"[❌ ERROR] El asistente ya posee {len(ya_tiene)} entrada(s) activa(s) para este evento.")
+            return
+
         # 3. Preguntar cuántas entradas quiere comprar
         cantidad_tickets = pedir_entero_positivo("¿Cuántas entradas desea comprar para este asistente?")
 
@@ -150,6 +158,18 @@ class EntradaService:
                 print("[ℹ INFO] Operación cancelada.")
                 return
 
+            entrada_encontrada = self.repo.buscar_por_id("entradas", id_entrada)
+            if not entrada_encontrada:
+                print(f"[❌ ERROR] No se encontró la entrada con el ID {id_entrada} o ya se encuentra inactiva.")
+                print("Por favor, intente con otro ID válido de la lista.\n")
+                continue
+
+            # [L-12] Confirmación explícita antes de cancelar la entrada
+            confirmacion = input(f"¿Confirma cancelar la entrada con código '{entrada_encontrada['codigo']}'? (s/n): ").strip().lower()
+            if confirmacion != "s":
+                print("[ℹ INFO] Operación cancelada por el usuario.")
+                return
+
             eliminado = self.repo.eliminar_logico("entradas", id_entrada)
             if eliminado:
                 print("[✔ ÉXITO] La entrada ha sido cancelada y el cupo fue liberado correctamente.")
@@ -163,8 +183,33 @@ class EntradaService:
     # OP ADICIONAL: Lista de Asistentes Ordenada (Por Apellido o Código)
     # =====================================================================
     def listar_asistentes_ordenada(self):
+        """
+        [L-10] Reporte de asistentes ordenados filtrado por evento.
+        Antes de ordenar, solicita al usuario que seleccione el evento específico
+        para evitar mezclar asistentes de diferentes eventos en el mismo reporte.
+        """
         print("\n--- LISTA DE ASISTENTES ORDENADA ---")
-        entradas = self.repo.listar("entradas")
+
+        # [L-10] Selección de evento específico para filtrar el reporte
+        eventos = self.repo.listar("eventos")
+        if not eventos:
+            print("[ℹ INFO] No hay eventos registrados.")
+            return
+        print("\n--- EVENTOS DISPONIBLES ---")
+        for ev in eventos:
+            print(f"ID: {ev['id']} | Nombre: {ev['nombre']} | Ciudad: {ev['ciudad']}")
+        while True:
+            id_evento_filtro = pedir_entero("Seleccione el ID del evento a consultar o 0 para todos")
+            if id_evento_filtro == 0:
+                entradas = self.repo.listar("entradas")
+                break
+            ev_sel = self.repo.buscar_por_id("eventos", id_evento_filtro)
+            if not ev_sel:
+                print("[❌ ERROR] El evento seleccionado no existe.")
+                continue
+            entradas = [e for e in self.repo.listar("entradas") if e["evento_id"] == id_evento_filtro]
+            break
+
         asistentes = self.repo.listar("asistentes")
 
         if not entradas or not asistentes:
@@ -201,3 +246,50 @@ class EntradaService:
         print("\n--- REPORTE DE ASISTENTES ORDENADOS ---")
         for item in lista_mapeada:
             print(f"Asistente: {item['apellido']}, {item['nombre']} | Código Ticket: {item['codigo']}")
+
+    # =====================================================================
+    # U - MODIFICAR (Corregir precio de una entrada existente)
+    # =====================================================================
+    def modificar(self):
+        """
+        [L-13] Permite corregir el precio de una entrada ya emitida.
+        Sin esta opción el operador debía cancelar y re-emitir la entrada completa,
+        generando un nuevo código y consumiendo cupo innecesariamente.
+        """
+        print("\n--- MODIFICAR ENTRADA ---")
+
+        while True:
+            id_entrada = pedir_entero("Ingrese el ID de la entrada a modificar o 0 para cancelar")
+
+            if id_entrada == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
+            entrada = self.repo.buscar_por_id("entradas", id_entrada)
+
+            if entrada is None:
+                print(f"[❌ ERROR] No existe una entrada activa con el ID {id_entrada}.")
+                print("Por favor, verifique e intente con un ID válido de la lista.\n")
+                continue
+            break
+
+        evento = self.repo.buscar_por_id("eventos", entrada["evento_id"])
+        asistente = self.repo.buscar_por_id("asistentes", entrada["asistente_id"])
+        nombre_evento = evento["nombre"] if evento else "No encontrado"
+        nombre_asistente = f"{asistente['nombres']} {asistente['apellidos']}" if asistente else "No encontrado"
+
+        print(f"\nEntrada seleccionada: Código {entrada['codigo']} | Evento: {nombre_evento} | Asistente: {nombre_asistente}")
+        print("Deje vacío si no desea modificar el campo (Presione Enter).")
+
+        nuevo_precio = pedir_entero_positivo(f"Nuevo precio (actual: ${entrada['precio']})")
+
+        nuevos_datos = {
+            "codigo": entrada["codigo"],
+            "evento_id": entrada["evento_id"],
+            "asistente_id": entrada["asistente_id"],
+            "precio": nuevo_precio,
+            "estado": True
+        }
+
+        self.repo.actualizar("entradas", id_entrada, nuevos_datos)
+        print("[✔ ÉXITO] Precio de la entrada actualizado correctamente.")

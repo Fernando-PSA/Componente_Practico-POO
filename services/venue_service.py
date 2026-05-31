@@ -20,8 +20,16 @@ class VenueService:
     def registrar(self):
         print("\n--- REGISTRAR VENUE (LUGAR) ---")
         
-        # Enviamos los mensajes limpios delegando la puntuación final a validaciones.py
-        nombre = pedir_solo_letras("Nombre del lugar (Venue)")
+        # [L-07] Unicidad de nombre del venue (case-insensitive) para evitar duplicados confusos en la selección
+        while True:
+            nombre = pedir_solo_letras("Nombre del lugar (Venue)")
+            venues_activos = self.repo.listar("venues")
+            duplicado = next((v for v in venues_activos if v["nombre"].lower() == nombre.lower()), None)
+            if duplicado:
+                print(f"[❌ ERROR] Ya existe un venue registrado con el nombre '{nombre}'. Ingrese uno diferente.")
+                continue
+            break
+
         ciudad = pedir_solo_letras("Ciudad")
         direccion = pedir_alfanumerico("Dirección")
         capacidad_maxima = pedir_capacidad_venue("Capacidad máxima de aforo")
@@ -94,6 +102,25 @@ class VenueService:
         nuevo_direccion = pedir_alfanumerico("Dirección nueva", valor_actual=venue['direccion'])
         nueva_capacidad = pedir_capacidad_venue("Capacidad nueva", valor_actual=venue['capacidad_maxima'])
 
+        # [L-02] Bloquea el cambio de ciudad si el venue ya tiene eventos activos asignados,
+        #         para no romper la regla de negocio "venue y evento deben ser de la misma ciudad"
+        if nueva_ciudad.lower() != venue["ciudad"].lower():
+            eventos_del_venue = [e for e in self.repo.listar("eventos") if e["venue_id"] == id_venue]
+            if eventos_del_venue:
+                print(f"[❌ ERROR] No se puede cambiar la ciudad: este venue tiene {len(eventos_del_venue)} evento(s) activo(s) asignado(s).")
+                print("[ℹ INFO] Elimine primero los eventos vinculados antes de cambiar la ciudad del venue.")
+                return
+
+        # [L-03] Bloquea la reducción de aforo si las entradas ya vendidas superan el nuevo límite
+        if nueva_capacidad < venue["capacidad_maxima"]:
+            eventos_del_venue = [e for e in self.repo.listar("eventos") if e["venue_id"] == id_venue]
+            entradas_activas = self.repo.listar("entradas")
+            for ev in eventos_del_venue:
+                vendidas = sum(1 for e in entradas_activas if e["evento_id"] == ev["id"])
+                if nueva_capacidad < vendidas:
+                    print(f"[❌ ERROR] No se puede reducir el aforo: el evento '{ev['nombre']}' ya tiene {vendidas} entradas vendidas.")
+                    return
+
         nuevos_datos = {
             "nombre": nuevo_nombre,
             "ciudad": nueva_ciudad,
@@ -131,6 +158,12 @@ class VenueService:
                 if evento["venue_id"] == id_venue:
                     print("[❌ ERROR] No se puede eliminar este venue porque tiene eventos activos asignados.")
                     return
+
+            # [L-12] Confirmación explícita antes de ejecutar la eliminación lógica
+            confirmacion = input(f"¿Confirma eliminar el venue '{venue['nombre']}'? (s/n): ").strip().lower()
+            if confirmacion != "s":
+                print("[ℹ INFO] Operación cancelada por el usuario.")
+                return
 
             eliminado = self.repo.eliminar_logico("venues", id_venue)
 

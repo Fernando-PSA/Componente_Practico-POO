@@ -185,8 +185,9 @@ def menu_entradas():
         print("\n========== MENÚ ENTRADAS ==========")
         print("1. Emitir nueva entrada (Control de Aforo)")
         print("2. Listar todas las entradas emitidas")
-        print("3. Cancelar/Anular entrada existente")
-        print("4. Reporte: Listar asistentes ordenados (Por apellido o código)")
+        print("3. Modificar precio de entrada existente")  # [L-13]
+        print("4. Cancelar/Anular entrada existente")
+        print("5. Reporte: Listar asistentes ordenados (Por apellido o código)")
         print("0. Volver al menú principal")
 
         opcion = input("Seleccione una opción: ").strip()
@@ -196,9 +197,11 @@ def menu_entradas():
         elif opcion == "2":
             entrada_service.listar()
         elif opcion == "3":
-            entrada_service.eliminar()
+            entrada_service.modificar()          # [L-13] Nueva opción de modificación
         elif opcion == "4":
-            entrada_service.listar_asistentes_ordenada() # Operación adicional de Ordenamiento
+            entrada_service.eliminar()
+        elif opcion == "5":
+            entrada_service.listar_asistentes_ordenada()
         elif opcion == "0":
             print("[ℹ INFO] Volviendo al menú principal...")
         else:

@@ -15,10 +15,11 @@ class EventoService:
         print("\n--- REGISTRAR EVENTO ---")
 
         while True:
-            # Quitamos los dos puntos manuales delegando el formato a validaciones.py
             nombre = pedir_solo_letras("Nombre del evento")
-            existente = self.repo.buscar_por_campo("eventos", "nombre", nombre)
-            if existente:
+            # [L-09] Comparación case-insensitive para evitar eventos duplicados que solo difieren en mayúsculas
+            eventos_activos = self.repo.listar("eventos")
+            duplicado = next((e for e in eventos_activos if e["nombre"].lower() == nombre.lower()), None)
+            if duplicado:
                 print("[❌ ERROR] Ya existe un evento activo con ese nombre. Ingrese otro.")
                 continue
             break
@@ -87,6 +88,12 @@ class EventoService:
         # -----------------------------------------------------------------
         patrocinadores = self.repo.listar("patrocinadores")
         patrocinadores_ids = []
+
+        # [L-05] Verificación anticipada: si no hay patrocinadores registrados se informa y se aborta
+        #         antes de llegar al bloque de selección, evitando un mensaje de error confuso al final
+        if len(patrocinadores) == 0:
+            print("[❌ ERROR] No existen patrocinadores registrados. Cree al menos uno antes de registrar un evento.")
+            return
 
         if len(patrocinadores) > 0:
             print("\n--- PATROCINADORES DISPONIBLES ---")
@@ -196,34 +203,113 @@ class EventoService:
 
         print("Deje vacío un campo si no desea modificarlo (Presione Enter).")
 
-        # 1. Modificación del Nombre (Controlando que siga siendo único)
+        # [L-01] Modificación del Nombre con comparación case-insensitive (L-09 también aplicado aquí)
         while True:
             nuevo_nombre = pedir_solo_letras("Nombre nuevo", valor_actual=evento['nombre'])
-            if nuevo_nombre == evento['nombre']:
+            if nuevo_nombre.lower() == evento['nombre'].lower():
                 break
-            existente = self.repo.buscar_por_campo("eventos", "nombre", nuevo_nombre)
-            if existente and existente["id"] != id_evento:
+            duplicado = next(
+                (e for e in self.repo.listar("eventos")
+                 if e["nombre"].lower() == nuevo_nombre.lower() and e["id"] != id_evento),
+                None
+            )
+            if duplicado:
                 print("[❌ ERROR] Ya existe otro evento registrado con ese nombre.")
                 continue
             break
 
-        # 2. Modificación de la Fecha (Cumpliendo la regla cronológica de 2026+)
+        # [L-01] Modificación de Fecha
         nueva_fecha = pedir_fecha("Fecha nueva", valor_actual=evento['fecha'])
 
-        # Preparamos los datos MANTENIENDO todas las relaciones estructurales intactas
+        # [L-01] Modificación de Ciudad con re-asignación obligatoria de Venue si cambia
+        nueva_ciudad = pedir_solo_letras("Ciudad nueva", valor_actual=evento['ciudad'])
+
+        # [L-01] Re-asignación de Organizador
+        organizadores = self.repo.listar("organizadores")
+        print("\n--- ORGANIZADORES DISPONIBLES ---")
+        for org in organizadores:
+            print(f"ID: {org['id']} | {org['nombres']} {org['apellidos']}")
+        while True:
+            nuevo_organizador_id = pedir_entero(f"ID del organizador (actual: {evento['organizador_id']}) o 0 para mantener")
+            if nuevo_organizador_id == 0:
+                nuevo_organizador_id = evento["organizador_id"]
+                break
+            org = self.repo.buscar_por_id("organizadores", nuevo_organizador_id)
+            if org is None:
+                print("[❌ ERROR] El organizador seleccionado no existe.")
+                continue
+            break
+
+        # [L-01] Re-asignación de Venue con validación de ciudad
+        venues = self.repo.listar("venues")
+        venues_ciudad = [v for v in venues if v["ciudad"].lower() == nueva_ciudad.lower()]
+        print(f"\n--- VENUES DISPONIBLES EN '{nueva_ciudad}' ---")
+        if not venues_ciudad:
+            print(f"[❌ ERROR] No hay venues registrados en '{nueva_ciudad}'. Registre uno primero.")
+            return
+        for v in venues_ciudad:
+            print(f"ID: {v['id']} | Nombre: {v['nombre']} | Capacidad: {v['capacidad_maxima']}")
+        while True:
+            nuevo_venue_id = pedir_entero(f"ID del venue (actual: {evento['venue_id']}) o 0 para mantener")
+            if nuevo_venue_id == 0:
+                # Mantener el venue actual solo si sigue siendo válido para la nueva ciudad
+                venue_actual = self.repo.buscar_por_id("venues", evento["venue_id"])
+                if venue_actual and venue_actual["ciudad"].lower() == nueva_ciudad.lower():
+                    nuevo_venue_id = evento["venue_id"]
+                    break
+                else:
+                    print("[❌ ERROR] El venue actual no pertenece a la nueva ciudad. Debe seleccionar uno.")
+                    continue
+            venue = self.repo.buscar_por_id("venues", nuevo_venue_id)
+            if venue is None:
+                print("[❌ ERROR] El venue seleccionado no existe.")
+                continue
+            if venue["ciudad"].lower() != nueva_ciudad.lower():
+                print("[❌ ERROR] El venue no pertenece a la ciudad del evento.")
+                continue
+            break
+
+        nueva_capacidad = self.repo.buscar_por_id("venues", nuevo_venue_id)["capacidad_maxima"]
+
+        # [L-01] Re-asignación de Patrocinadores
+        patrocinadores = self.repo.listar("patrocinadores")
+        nuevos_patrocinadores_ids = evento.get("patrocinadores_ids", [])
+        if patrocinadores:
+            print("\n--- PATROCINADORES DISPONIBLES ---")
+            for p in patrocinadores:
+                print(f"ID: {p['id']} | Empresa: {p['empresa']} | Aporte: ${p['aporte']}")
+            ids_input = input(f"IDs separados por coma (Enter para mantener actuales {nuevos_patrocinadores_ids}): ").strip()
+            if ids_input != "":
+                nuevos_patrocinadores_ids = []
+                for id_texto in ids_input.split(","):
+                    if id_texto.strip() == "":
+                        continue
+                    try:
+                        id_pat = int(id_texto.strip())
+                        pat = self.repo.buscar_por_id("patrocinadores", id_pat)
+                        if pat and id_pat not in nuevos_patrocinadores_ids:
+                            nuevos_patrocinadores_ids.append(id_pat)
+                        elif not pat:
+                            print(f"[❌ ERROR] Patrocinador ID {id_pat} no existe, se omite.")
+                    except ValueError:
+                        print(f"[❌ ERROR] '{id_texto.strip()}' no es un ID válido, se omite.")
+                if not nuevos_patrocinadores_ids:
+                    print("[❌ ERROR] Debe tener al menos un patrocinador. Se conservan los originales.")
+                    nuevos_patrocinadores_ids = evento.get("patrocinadores_ids", [])
+
         nuevos_datos = {
             "nombre": nuevo_nombre,
-            "ciudad": evento["ciudad"],  
+            "ciudad": nueva_ciudad,
             "fecha": nueva_fecha,
-            "capacidad_maxima": evento["capacidad_maxima"],
-            "organizador_id": evento["organizador_id"],
-            "venue_id": evento["venue_id"],
-            "patrocinadores_ids": evento.get("patrocinadores_ids", []),
+            "capacidad_maxima": nueva_capacidad,
+            "organizador_id": nuevo_organizador_id,
+            "venue_id": nuevo_venue_id,
+            "patrocinadores_ids": nuevos_patrocinadores_ids,
             "estado": True
         }
 
         self.repo.actualizar("eventos", id_evento, nuevos_datos)
-        print("[✔ ÉXITO] Evento modificado manteniendo de forma consistente sus relaciones.")
+        print("[✔ ÉXITO] Evento modificado de forma completa y consistente.")
 
     # =====================================================================
     # D - ELIMINAR (Eliminar Evento Lógico - CON REINTENTOS)
@@ -252,6 +338,12 @@ class EventoService:
                 if entrada["evento_id"] == id_evento and entrada["estado"]:
                     print("[❌ ERROR] Denegado: No puede eliminar un evento que ya posee entradas emitidas.")
                     return
+
+            # [L-12] Confirmación explícita antes de ejecutar la eliminación lógica
+            confirmacion = input(f"¿Confirma eliminar el evento '{evento['nombre']}'? (s/n): ").strip().lower()
+            if confirmacion != "s":
+                print("[ℹ INFO] Operación cancelada por el usuario.")
+                return
 
             eliminado = self.repo.eliminar_logico("eventos", id_evento)
             if eliminado:
@@ -359,6 +451,11 @@ class EventoService:
 
             if not f_inicio or not f_fin:
                 print("[❌ ERROR] Hubo un problema al interpretar las fechas ingresadas.")
+                return
+
+            # [L-08] Valida que la fecha de inicio sea anterior o igual a la fecha de fin
+            if f_inicio > f_fin:
+                print("[❌ ERROR] La fecha de inicio no puede ser posterior a la fecha de fin.")
                 return
 
             filtrados = []
