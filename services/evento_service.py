@@ -15,15 +15,16 @@ class EventoService:
         print("\n--- REGISTRAR EVENTO ---")
 
         while True:
-            nombre = pedir_solo_letras("Nombre del evento: ")
+            # Quitamos los dos puntos manuales delegando el formato a validaciones.py
+            nombre = pedir_solo_letras("Nombre del evento")
             existente = self.repo.buscar_por_campo("eventos", "nombre", nombre)
             if existente:
                 print("[❌ ERROR] Ya existe un evento activo con ese nombre. Ingrese otro.")
                 continue
             break
         
-        ciudad = pedir_solo_letras("Ciudad: ")
-        fecha = pedir_fecha("Fecha del evento: ")
+        ciudad = pedir_solo_letras("Ciudad")
+        fecha = pedir_fecha("Fecha del evento")
 
         # -----------------------------------------------------------------
         # ASIGNACIÓN DE ORGANIZADOR
@@ -38,10 +39,16 @@ class EventoService:
             print(f"ID: {organizador['id']} | Nombre: {organizador['nombres']} {organizador['apellidos']} | Correo: {organizador['correo']}")
 
         while True:
-            organizador_id = pedir_entero("Seleccione el ID del organizador: ")
+            organizador_id = pedir_entero("Seleccione el ID del organizador o 0 para cancelar")
+
+            if organizador_id == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
             organizador = self.repo.buscar_por_id("organizadores", organizador_id)
+            
             if organizador is None:
-                print("[❌ ERROR] El organizador seleccionado no existe.")
+                print("[❌ ERROR] El organizador seleccionado no existe.\n")
                 continue
             break
 
@@ -58,15 +65,20 @@ class EventoService:
             print(f"ID: {venue['id']} | Nombre: {venue['nombre']} | Ciudad: {venue['ciudad']} | Capacidad: {venue['capacidad_maxima']}")
 
         while True:
-            venue_id = pedir_entero("Seleccione el ID del venue: ")
+            venue_id = pedir_entero("Seleccione el ID del venue o 0 para cancelar")
+
+            if venue_id == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
             venue = self.repo.buscar_por_id("venues", venue_id)
             if venue is None:
-                print("[❌ ERROR] El venue seleccionado no existe.")
+                print("[❌ ERROR] El venue seleccionado no existe.\n")
                 continue
 
             # Regla de negocio: El lugar debe ser de la misma ciudad del evento
             if venue["ciudad"].lower() != ciudad.lower():
-                print("[❌ ERROR] No se pudo registrar: el venue no pertenece a la misma ciudad del evento.")
+                print("[❌ ERROR] No se pudo registrar: el venue no pertenece a la misma ciudad del evento.\n")
                 continue
             break
         
@@ -164,12 +176,23 @@ class EventoService:
     # =====================================================================
     def modificar(self):
         print("\n--- MODIFICAR EVENTO ---")
-        id_evento = pedir_entero("Ingrese el ID del evento a modificar: ")
-        evento = self.repo.buscar_por_id("eventos", id_evento)
+        
+        # 🔄 BUCLE 1: Reintenta hasta que el usuario ingrese un ID de evento real y existente
+        while True:
+            id_evento = pedir_entero("Ingrese el ID del evento a modificar o 0 para cancelar")
 
-        if evento is None:
-            print("[❌ ERROR] No existe un evento activo con ese ID.")
-            return
+            if id_evento == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
+            evento = self.repo.buscar_por_id("eventos", id_evento)
+
+            if evento is None:
+                print(f"[❌ ERROR] No existe un evento activo con el ID {id_evento}.")
+                print("Por favor, verifique e intente con un ID válido de la lista.\n")
+                continue
+
+            break
 
         print("Deje vacío un campo si no desea modificarlo (Presione Enter).")
 
@@ -195,7 +218,7 @@ class EventoService:
             "capacidad_maxima": evento["capacidad_maxima"],
             "organizador_id": evento["organizador_id"],
             "venue_id": evento["venue_id"],
-            "patrocinadores_ids": evento["patrocinadores_ids"],
+            "patrocinadores_ids": evento.get("patrocinadores_ids", []),
             "estado": True
         }
 
@@ -203,24 +226,41 @@ class EventoService:
         print("[✔ ÉXITO] Evento modificado manteniendo de forma consistente sus relaciones.")
 
     # =====================================================================
-    # D - ELIMINAR (Eliminar Evento Lógico)
+    # D - ELIMINAR (Eliminar Evento Lógico - CON REINTENTOS)
     # =====================================================================
     def eliminar(self):
         print("\n--- ELIMINAR EVENTO ---")
-        id_evento = pedir_entero("Ingrese el ID del evento a eliminar: ")
+        
+        # 🔄 BUCLE 2: Reintenta hasta obtener un ID válido para eliminar lógicamente
+        while True:
+            id_evento = pedir_entero("Ingrese el ID del evento a eliminar o 0 para cancelar")
 
-        # Regla de negocio: No borrar eventos que ya vendieron entradas
-        entradas = self.repo.listar("entradas")
-        for entrada in entradas:
-            if entrada["evento_id"] == id_evento and entrada["estado"]:
-                print("[❌ ERROR] Denegado: No puede eliminar un evento que ya posee entradas emitidas.")
+            if id_evento == 0:
+                print("[ℹ INFO] Operación cancelada.")
                 return
+            
+            evento = self.repo.buscar_por_id("eventos", id_evento)
 
-        eliminado = self.repo.eliminar_logico("eventos", id_evento)
-        if eliminado:
-            print("[✔ ÉXITO] Evento eliminado lógicamente.")
-        else:
-            print("[❌ ERROR] No se encontró el evento o ya está inactivo.")
+            if evento is None:
+                print(f"[❌ ERROR] No existe un evento activo con el ID {id_evento}.")
+                print("Por favor, intente con otro ID de la lista.\n")
+                continue
+
+            # Regla de negocio: No borrar eventos que ya vendieron entradas
+            entradas = self.repo.listar("entradas")
+            for entrada in entradas:
+                if entrada["evento_id"] == id_evento and entrada["estado"]:
+                    print("[❌ ERROR] Denegado: No puede eliminar un evento que ya posee entradas emitidas.")
+                    return
+
+            eliminado = self.repo.eliminar_logico("eventos", id_evento)
+            if eliminado:
+                print("[✔ ÉXITO] Evento eliminado lógicamente.")
+                break
+            else:
+                print(f"[❌ ERROR] No se encontró el evento con el ID {id_evento} o ya está inactivo.")
+                print("Por favor, intente con otro ID de la lista.\n")
+                continue
 
     # =====================================================================
     # OP ADICIONAL: Ingresos Totales Por Evento
@@ -258,7 +298,7 @@ class EventoService:
         print("\n--- FILTRAR EVENTOS ---")
         print("1. Por ciudad")
         print("2. Por rango de fechas")
-        opcion = pedir_entero("Seleccione una opción de filtrado: ")
+        opcion = pedir_entero("Seleccione una opción de filtrado")
 
         # Cambiado a False para forzar la lectura completa de db.json en las pruebas
         eventos = self.repo.listar("eventos", solo_activos=False)
@@ -311,7 +351,7 @@ class EventoService:
                         m = int(partes[1])
                         a = int(partes[2])
                         return datetime(a, m, d)
-                    except (ValueError, IndexError):  # ⬅️ Corregido con E mayúscula
+                    except (ValueError, IndexError):  # Corregido con E mayúscula
                         return None
 
             f_inicio = parsear_fecha(str_inicio)

@@ -12,6 +12,7 @@ def campo_vacio(valor):
 # =====================================================================
 def pedir_solo_letras(mensaje, valor_actual=None, permitir_vacio=False):
     while True:
+        # ESTÁNDAR LIMPIO: Añade los dos puntos de forma automática en ambos casos
         prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         valor = input(prompt).strip()
 
@@ -93,7 +94,8 @@ def pedir_empresa(mensaje, valor_actual=None):
 # =====================================================================
 def pedir_telefono(mensaje, valor_actual=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        # CORREGIDO: Estandarizado con el resto de la arquitectura
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         telefono = input(prompt).strip()
 
         if telefono == "" and valor_actual is not None:
@@ -119,7 +121,8 @@ def pedir_telefono(mensaje, valor_actual=None):
 # =====================================================================
 def pedir_correo(mensaje, valor_actual=None, repo=None, coleccion=None, id_registro=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        # CORREGIDO: Unificado para evitar textos pegados o duplicados
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         correo = input(prompt).strip()
 
         if correo == "" and valor_actual is not None:
@@ -148,7 +151,7 @@ def pedir_correo(mensaje, valor_actual=None, repo=None, coleccion=None, id_regis
 # =====================================================================
 def pedir_entero(mensaje, valor_actual=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         valor = input(prompt).strip()
 
         if valor == "" and valor_actual is not None:
@@ -239,7 +242,7 @@ def pedir_aporte_economico(mensaje, valor_actual=None):
             continue
 
         num = int(valor)
-        if num <= 10000:
+        if num < 10000:
             print("[❌ ERROR] Monto inválido. El aporte mínimo de un patrocinador debe ser de $10000.")
             continue
 
@@ -348,7 +351,8 @@ def validar_cedula_ecuatoriana(cedula):
 # =====================================================================
 def pedir_cedula(mensaje, valor_actual=None, repo=None, coleccion=None, id_registro=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        # CORREGIDO: Ahora el else también tiene los dos puntos automáticos de forma simétrica
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         cedula = input(prompt).strip()
 
         if cedula == "" and valor_actual is not None:

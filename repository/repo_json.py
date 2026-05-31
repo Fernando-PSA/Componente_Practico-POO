@@ -177,16 +177,4 @@ class RepoJson:
         return False #No se encontraron registros
     
     
-    # =====================================================
-    # METODO PARA GENERAR ID SECUENCIAL AUTOMÁTICO
-    # =====================================================
-    def generar_id_secuencial(self, coleccion):
-        # Obtenemos todos los registros de la colección (incluyendo inactivos)
-        registros = self.listar(coleccion, solo_activos=False)
-        
-        if len(registros) == 0:
-            return 1
-
-        # Buscamos el ID máximo actual y le sumamos 1
-        ultimo_id = max(registro["id"] for registro in registros)
-        return ultimo_id + 1
+    

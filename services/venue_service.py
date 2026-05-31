@@ -20,11 +20,11 @@ class VenueService:
     def registrar(self):
         print("\n--- REGISTRAR VENUE (LUGAR) ---")
         
-        # Delegamos el control de formato y obligatoriedad a validaciones.py
-        nombre = pedir_solo_letras("Nombre del lugar (Venue): ")
-        ciudad = pedir_solo_letras("Ciudad: ")
-        direccion = pedir_alfanumerico("Dirección: ")
-        capacidad_maxima = pedir_capacidad_venue("Capacidad máxima de aforo: ")
+        # Enviamos los mensajes limpios delegando la puntuación final a validaciones.py
+        nombre = pedir_solo_letras("Nombre del lugar (Venue)")
+        ciudad = pedir_solo_letras("Ciudad")
+        direccion = pedir_alfanumerico("Dirección")
+        capacidad_maxima = pedir_capacidad_venue("Capacidad máxima de aforo")
 
         # Listamos todos para generar el ID secuencial autoincremental desde 1
         venues_en_db = self.repo.listar("venues", solo_activos=False)
@@ -64,16 +64,27 @@ class VenueService:
             )
 
     # =====================================================================
-    # U - ACTUALIZAR (Modificar Venue)
+    # U - ACTUALIZAR (Modificar Venue - VERSIÓN CON REINTENTOS)
     # =====================================================================
     def modificar(self):
         print("\n--- MODIFICAR VENUE ---")
-        id_venue = pedir_entero("Ingrese el ID del venue a modificar: ")
-        venue = self.repo.buscar_por_id("venues", id_venue)
+        
+        # 🔄 BUCLE 1: Reintenta de forma interactiva si el ID del local no existe
+        while True:
+            id_venue = pedir_entero("Ingrese el ID del venue a modificar o 0 para cancelar")
 
-        if venue is None:
-            print("[❌ ERROR] No existe un venue activo con ese ID.")
-            return
+            if id_venue == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
+            venue = self.repo.buscar_por_id("venues", id_venue)
+
+            if venue is None:
+                print(f"[❌ ERROR] No existe un venue activo con el ID {id_venue}.")
+                print("Por favor, verifique e intente con un ID válido de la lista.\n")
+                continue # 🔄 Se mantiene en el bucle solicitando el ID otra vez
+                
+            break  # 🏁 Si el ID es correcto, rompe el ciclo para editar los campos
 
         print("Deje vacío un campo si no desea modificarlo (Presione Enter).")
 
@@ -95,15 +106,34 @@ class VenueService:
         print("[✔ ÉXITO] Venue modificado correctamente.")
 
     # =====================================================================
-    # D - ELIMINAR (Eliminar Venue Lógico)
+    # D - ELIMINAR (Eliminar Venue Lógico - VERSIÓN CON REINTENTOS)
     # =====================================================================
     def eliminar(self):
         print("\n--- ELIMINAR VENUE ---")
-        id_venue = pedir_entero("Ingrese el ID del venue a eliminar: ")
+            
+        while True:
+            id_venue = pedir_entero("Ingrese el ID del venue a eliminar o 0 para cancelar")
 
-        eliminado = self.repo.eliminar_logico("venues", id_venue)
+            if id_venue == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
 
-        if eliminado:
-            print("[✔ ÉXITO] Venue eliminado lógicamente.")
-        else:
-            print("[❌ ERROR] No se encontró el venue o ya se encuentra inactivo.")
+            venue = self.repo.buscar_por_id("venues", id_venue)
+
+            if venue is None:
+                print(f"[❌ ERROR] No existe un venue activo con el ID {id_venue}.")
+                print("Por favor, intente con otro ID.\n")
+                continue
+
+            eventos = self.repo.listar("eventos")
+
+            for evento in eventos:
+                if evento["venue_id"] == id_venue:
+                    print("[❌ ERROR] No se puede eliminar este venue porque tiene eventos activos asignados.")
+                    return
+
+            eliminado = self.repo.eliminar_logico("venues", id_venue)
+
+            if eliminado:
+                print("[✔ ÉXITO] Venue eliminado lógicamente.")
+                break

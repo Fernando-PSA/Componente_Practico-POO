@@ -1,6 +1,6 @@
 from models.entrada import Entrada
 from utils.generador_id import generar_id_secuencial
-from utils.validaciones import pedir_entero, validar_codigo_unico, pedir_entero_positivo
+from utils.validaciones import pedir_entero, pedir_entero_positivo
 
 class EntradaService:
 
@@ -22,13 +22,21 @@ class EntradaService:
             
         print("\n--- EVENTOS DISPONIBLES ---")
         for ev in eventos:
-            print(f"ID: {ev['id']} | Nombre: {ev['nombre']} | Ciudad: {ev['ciudad']} | Capacidad Máx:: {ev['capacidad_maxima']} personas")
+            print(f"ID: {ev['id']} | Nombre: {ev['nombre']} | Ciudad: {ev['ciudad']} | Capacidad Máx: {ev['capacidad_maxima']} personas")
             
-        id_evento = pedir_entero("Seleccione el ID del evento: ")
-        evento = self.repo.buscar_por_id("eventos", id_evento)
-        if not evento:
-            print("[❌ ERROR] El evento seleccionado no existe.")
-            return
+        # 🔄 BUCLE 1: Reintenta hasta que el operador ingrese un ID de evento existente
+        while True:
+            id_evento = pedir_entero("Seleccione el ID del evento o 0 para cancelar")
+
+            if id_evento == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
+            evento = self.repo.buscar_por_id("eventos", id_evento)
+            if not evento:
+                print(f"[❌ ERROR] El evento con ID {id_evento} no existe. Por favor, seleccione otro.\n")
+                continue
+            break
 
         # 2. Selección del Asistente
         asistentes = self.repo.listar("asistentes")
@@ -38,27 +46,34 @@ class EntradaService:
             
         print("\n--- ASISTENTES DISPONIBLES ---")
         for asis in asistentes:
-            # Usamos 'nombres' y 'apellidos' tal como están en tu db.json y modelo
             print(f"ID: {asis['id']} | Nombre: {asis['nombres']} {asis['apellidos']} | Cédula: {asis['cedula']}")
             
-        id_asistente = pedir_entero("Seleccione el ID del asistente: ")
-        asistente = self.repo.buscar_por_id("asistentes", id_asistente)
-        if not asistente:
-            print("[❌ ERROR] El asistente seleccionado no existe.")
-            return
+        # 🔄 BUCLE 2: Reintenta hasta que el operador ingrese un ID de asistente existente
+        while True:
+            id_asistente = pedir_entero("Seleccione el ID del asistente o 0 para cancelar")
 
-        # 3. 🆕 Preguntar CUÁNTAS entradas quiere comprar
-        cantidad_tickets = pedir_entero_positivo("¿Cuántas entradas desea comprar para este asistente?: ")
+            if id_asistente == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
+            asistente = self.repo.buscar_por_id("asistentes", id_asistente)
+            if not asistente:
+                print(f"[❌ ERROR] El asistente con ID {id_asistente} no existe. Por favor, seleccione otro.\n")
+                continue
+            break
+
+        # 3. Preguntar cuántas entradas quiere comprar
+        cantidad_tickets = pedir_entero_positivo("¿Cuántas entradas desea comprar para este asistente?")
 
         # 4. Preguntar el valor monetario de cada ticket
-        precio = pedir_entero_positivo("Valor en dólares de cada entrada ($): ")
+        precio = pedir_entero_positivo("Valor en dólares de cada entrada ($)")
 
         # Contamos cuántas entradas ya se han vendido históricamente para este evento
         entradas_totales = self.repo.listar("entradas", solo_activos=False)
         entradas_vendidas = sum(1 for e in entradas_totales if e["evento_id"] == id_evento and e["estado"] == True)
 
         # 🚨 CONTROL DE AFORO ANTES DE PROCESAR: Verificamos si caben todas las solicitadas
-        if Stream_Aforo := (entradas_vendidas + cantidad_tickets) > evento["capacidad_maxima"]:
+        if (entradas_vendidas + cantidad_tickets) > evento["capacidad_maxima"]:
             cupos_disponibles = evento["capacidad_maxima"] - entradas_vendidas
             print(f"[❌ ERROR] Operación bloqueada por Control de Aforo.")
             print(f"[ℹ INFO] Solo quedan {cupos_disponibles} cupos disponibles. No puede comprar {cantidad_tickets}.")
@@ -67,8 +82,8 @@ class EntradaService:
         # 5. Bucle automático para emitir cada ticket individual
         print("\nProcesando emisión de tickets...")
         for i in range(cantidad_tickets):
-            # 🔄 CAMBIO AQUÍ: Llamamos al nombre correcto de tu repositorio
-            nuevo_id = self.repo.generar_id_secuencial("entradas")
+            # Generamos el ID secuencial basado en la lista actualizada en tiempo real
+            nuevo_id = generar_id_secuencial(entradas_totales)
             codigo_ticket = f"TICK-{id_evento}-{nuevo_id}"
 
             # Instanciamos el modelo de la Entrada
@@ -80,8 +95,12 @@ class EntradaService:
                 precio=precio
             )
 
+            # Convertimos a diccionario e insertamos en la lista local antes de guardar
+            diccionario_entrada = nueva_entrada.convertir_a_diccionario()
+            entradas_totales.append(diccionario_entrada)
+
             # Guardamos físicamente en el JSON
-            self.repo.guardar("entradas", nueva_entrada.convertir_a_diccionario())
+            self.repo.guardar("entradas", diccionario_entrada)
             print(f"   -> [✔] Ticket {i+1}/{cantidad_tickets} generado con código: {codigo_ticket}")
 
         # Mensaje de éxito global con la matemática correcta en unidades
@@ -118,17 +137,27 @@ class EntradaService:
             )
 
     # =====================================================================
-    # D - ELIMINAR (Cancelar/Anular Entrada)
+    # D - ELIMINAR (Cancelar/Anular Entrada - VERSIÓN CON REINTENTOS)
     # =====================================================================
     def eliminar(self):
         print("\n--- CANCELAR ENTRADA ---")
-        id_entrada = pedir_entero("Ingrese el ID de registro de la entrada a cancelar: ")
+        
+        # 🔄 BUCLE 3: Reintenta pedir el ID hasta que se ingrese uno que exista en db.json
+        while True:
+            id_entrada = pedir_entero("Ingrese el ID de registro de la entrada a cancelar o 0 para cancelar")
 
-        eliminado = self.repo.eliminar_logico("entradas", id_entrada)
-        if eliminado:
-            print("[✔ ÉXITO] La entrada ha sido cancelada y el cupo fue liberado correctamente.")
-        else:
-            print("[❌ ERROR] No se encontró la entrada seleccionada o ya se encontraba inactiva.")
+            if id_entrada == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
+            eliminado = self.repo.eliminar_logico("entradas", id_entrada)
+            if eliminado:
+                print("[✔ ÉXITO] La entrada ha sido cancelada y el cupo fue liberado correctamente.")
+                break
+            else:
+                print(f"[❌ ERROR] No se encontró la entrada con el ID {id_entrada} o ya se encuentra inactiva.")
+                print("Por favor, intente con otro ID válido de la lista.\n")
+                continue
 
     # =====================================================================
     # OP ADICIONAL: Lista de Asistentes Ordenada (Por Apellido o Código)
@@ -145,7 +174,11 @@ class EntradaService:
         print("\nCriterios de Ordenamiento:")
         print("1. Ordenar Alfabéticamente por Apellido")
         print("2. Ordenar por Código Secuencial de Entrada")
-        opcion = pedir_entero("Seleccione una opción: ")
+        opcion = pedir_entero("Seleccione una opción o 0 para cancelar")
+
+        if opcion == 0:
+            print("[ℹ INFO] Operación cancelada.")
+            return
 
         lista_mapeada = []
         for entrada in entradas:

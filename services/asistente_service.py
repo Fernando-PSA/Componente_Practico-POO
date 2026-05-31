@@ -21,12 +21,12 @@ class AsistenteService:
     def registrar(self):
         print("\n--- REGISTRAR ASISTENTE ---")
         
-        # Enviamos el repo y la colección para que valide la unicidad automáticamente internamente
-        cedula = pedir_cedula("Cédula: ", repo=self.repo, coleccion="asistentes")
-        nombres = pedir_solo_letras("Nombres: ")
-        apellidos = pedir_solo_letras("Apellidos: ")
-        correo = pedir_correo("Correo electrónico: ", repo=self.repo, coleccion="asistentes")
-        direccion = pedir_alfanumerico("Dirección: ")
+        # Eliminamos los dos puntos manuales para delegar el formato a validaciones.py
+        cedula = pedir_cedula("Cédula", repo=self.repo, coleccion="asistentes")
+        nombres = pedir_solo_letras("Nombres")
+        apellidos = pedir_solo_letras("Apellidos")
+        correo = pedir_correo("Correo electrónico", repo=self.repo, coleccion="asistentes")
+        direccion = pedir_alfanumerico("Dirección")
 
         # Obtener lista completa para el ID secuencial
         asistentes_en_db = self.repo.listar("asistentes", solo_activos=False)
@@ -67,25 +67,43 @@ class AsistenteService:
             )
 
     # =====================================================================
-    # U - ACTUALIZAR (Modificar Asistente)
+    # U - ACTUALIZAR (Modificar Asistente - VERSIÓN CON REINTENTOS)
     # =====================================================================
     def modificar(self):
         print("\n--- MODIFICAR ASISTENTE ---")
-        id_asistente = pedir_entero("Ingrese el ID del asistente a modificar: ")
-        asistente = self.repo.buscar_por_id("asistentes", id_asistente)
+        
+        # 🔄 BUCLE 1: Reintenta pedir el ID hasta que exista en la base de datos
+        while True:
+            id_asistente = pedir_entero("Ingrese el ID del asistente a modificar o 0 para cancelar")
 
-        if asistente is None:
-            print("[❌ ERROR] No existe un asistente activo con ese ID.")
-            return
+            if id_asistente == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
+            asistente = self.repo.buscar_por_id("asistentes", id_asistente)
+
+            if asistente is None:
+                print(f"[❌ ERROR] No existe un asistente activo con el ID {id_asistente}.")
+                print("Por favor, verifique e intente con un ID válido de la lista.\n")
+                continue # 🔄 Mantiene al usuario en el flujo de solicitud
+                        
+            break # 🏁 Si el ID existe, rompe el bucle para editar los campos
 
         print("Deje vacío un campo si no desea modificarlo (Presione Enter).")
         
-        # Pasamos el 'valor_actual' para que la función sepa que es una modificación opcional
-        # Pasamos el 'id_registro' para evitar falsos positivos de duplicados consigo mismo
-        nueva_cedula = pedir_cedula("Cédula nueva", valor_actual=asistente['cedula'], repo=self.repo, coleccion="asistentes", id_registro=id_asistente)
+        # 🔄 BUCLE 2: Control interactivo de unicidad para la Cédula nueva
+        while True:
+            nueva_cedula = pedir_cedula("Cédula nueva", valor_actual=asistente['cedula'], repo=self.repo, coleccion="asistentes", id_registro=id_asistente)
+            break
+
         nuevos_nombres = pedir_solo_letras("Nombres nuevos", valor_actual=asistente['nombres'])
         nuevos_apellidos = pedir_solo_letras("Apellidos nuevos", valor_actual=asistente['apellidos'])
-        nuevo_correo = pedir_correo("Correo nuevo", valor_actual=asistente['correo'], repo=self.repo, coleccion="asistentes", id_registro=id_asistente)
+
+        # 🔄 BUCLE 3: Control interactivo de unicidad para el Correo nuevo
+        while True:
+            nuevo_correo = pedir_correo("Correo nuevo", valor_actual=asistente['correo'], repo=self.repo, coleccion="asistentes", id_registro=id_asistente)
+            break
+
         nuevo_direccion = pedir_alfanumerico("Dirección nueva", valor_actual=asistente['direccion'])
 
         nuevos_datos = {
@@ -101,15 +119,34 @@ class AsistenteService:
         print("[✔ ÉXITO] Asistente modificado correctamente.")
 
     # =====================================================================
-    # D - ELIMINAR (Eliminar Asistente Logico)
+    # D - ELIMINAR (Eliminar Asistente Lógico - VERSIÓN CON REINTENTOS)
     # =====================================================================
     def eliminar(self):
         print("\n--- ELIMINAR ASISTENTE ---")
-        id_asistente = pedir_entero("Ingrese el ID del asistente a eliminar: ")
+            
+        while True:
+            id_asistente = pedir_entero("Ingrese el ID del asistente a eliminar o 0 para cancelar")
 
-        eliminado = self.repo.eliminar_logico("asistentes", id_asistente)
+            if id_asistente == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
 
-        if eliminado:
-            print("[✔ ÉXITO] Asistente eliminado lógicamente.")
-        else:
-            print("[❌ ERROR] No se encontró el asistente o ya se encuentra inactivo.")
+            asistente = self.repo.buscar_por_id("asistentes", id_asistente)
+
+            if asistente is None:
+                print(f"[❌ ERROR] No existe un asistente activo con el ID {id_asistente}.")
+                print("Por favor, intente con otro ID de la lista.\n")
+                continue
+
+            entradas = self.repo.listar("entradas")
+
+            for entrada in entradas:
+                if entrada["asistente_id"] == id_asistente:
+                    print("[❌ ERROR] No se puede eliminar este asistente porque tiene entradas activas registradas.")
+                    return
+
+            eliminado = self.repo.eliminar_logico("asistentes", id_asistente)
+
+            if eliminado:
+                print("[✔ ÉXITO] Asistente eliminado lógicamente.")
+                break

@@ -3,8 +3,7 @@ from utils.generador_id import generar_id_secuencial
 # Importamos las utilidades de validación correspondientes
 from utils.validaciones import (
     pedir_empresa, 
-    pedir_telefono, 
-    pedir_entero_positivo, 
+    pedir_telefono,  
     pedir_entero,
     pedir_aporte_economico
 )
@@ -22,10 +21,10 @@ class PatrocinadorService:
     def registrar(self):
         print("\n--- REGISTRAR PATROCINADOR ---")
 
-        # Invocamos las validaciones obligatorias de registro
-        empresa = pedir_empresa("Empresa: ")
-        telefono = pedir_telefono("Teléfono: ")
-        aporte = pedir_aporte_economico("Aporte económico: ")
+        # Invocamos las validaciones sin dos puntos manuales para acoplarse a validaciones.py
+        empresa = pedir_empresa("Empresa")
+        telefono = pedir_telefono("Teléfono")
+        aporte = pedir_aporte_economico("Aporte económico")
 
         # Obtener patrocinadores registrados para el ID autoincremental
         patrocinadores = self.repo.listar("patrocinadores", solo_activos=False)
@@ -64,17 +63,27 @@ class PatrocinadorService:
             )
 
     # =====================================================================
-    # U - ACTUALIZAR (Modificar Patrocinador)
+    # U - ACTUALIZAR (Modificar Patrocinador - VERSIÓN CON REINTENTOS)
     # =====================================================================
     def modificar(self):
         print("\n--- MODIFICAR PATROCINADOR ---")
 
-        id_patrocinador = pedir_entero("Ingrese el ID del patrocinador a modificar: ")
-        patrocinador = self.repo.buscar_por_id("patrocinadores", id_patrocinador)
+        # 🔄 BUCLE 1: Reintenta pedir el ID hasta que exista en el archivo db.json
+        while True:
+            id_patrocinador = pedir_entero("Ingrese el ID del patrocinador a modificar o 0 para cancelar")
 
-        if patrocinador is None:
-            print("[❌ ERROR] No existe un patrocinador activo con ese ID.")
-            return
+            if id_patrocinador == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
+            patrocinador = self.repo.buscar_por_id("patrocinadores", id_patrocinador)
+
+            if patrocinador is None:
+                print(f"[❌ ERROR] No existe un patrocinador activo con el ID {id_patrocinador}.")
+                print("Por favor, verifique e intente con un ID válido de la lista.\n")
+                continue # 🔄 Se queda en la línea inferior solicitando el ID otra vez
+                
+            break  # 🏁 Si existe el ID, rompe el ciclo para continuar con la captura
 
         print("Deje vacío un campo si no desea modificarlo (Presione Enter).")
 
@@ -94,16 +103,34 @@ class PatrocinadorService:
         print("[✔ ÉXITO] Patrocinador modificado correctamente.")
 
     # =====================================================================
-    # D - ELIMINAR (Eliminar Patrocinador Lógico)
+    # D - ELIMINAR (Eliminar Patrocinador Lógico - VERSIÓN CON REINTENTOS)
     # =====================================================================
     def eliminar(self):
         print("\n--- ELIMINAR PATROCINADOR ---")
 
-        id_patrocinador = pedir_entero("Ingrese el ID del patrocinador a eliminar: ")
-        
-        eliminado = self.repo.eliminar_logico("patrocinadores", id_patrocinador)
+        while True:
+            id_patrocinador = pedir_entero("Ingrese el ID del patrocinador a eliminar o 0 para cancelar")
 
-        if eliminado:
-            print("[✔ ÉXITO] Patrocinador eliminado lógicamente.")
-        else:
-            print("[❌ ERROR] No se encontró el patrocinador o ya se encuentra inactivo.")
+            if id_patrocinador == 0:
+                print("[ℹ INFO] Operación cancelada.")
+                return
+
+            patrocinador = self.repo.buscar_por_id("patrocinadores", id_patrocinador)
+
+            if patrocinador is None:
+                print(f"[❌ ERROR] No existe un patrocinador activo con el ID {id_patrocinador}.")
+                print("Por favor, intente con otro ID de la lista.\n")
+                continue
+
+            eventos = self.repo.listar("eventos")
+
+            for evento in eventos:
+                if id_patrocinador in evento.get("patrocinadores_ids", []):
+                    print("[❌ ERROR] No se puede eliminar este patrocinador porque está asignado a eventos activos.")
+                    return
+
+            eliminado = self.repo.eliminar_logico("patrocinadores", id_patrocinador)
+
+            if eliminado:
+                print("[✔ ÉXITO] Patrocinador eliminado lógicamente.")
+                break
