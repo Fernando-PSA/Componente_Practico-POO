@@ -42,7 +42,7 @@ def pedir_solo_letras(mensaje, valor_actual=None, permitir_vacio=False):
 # =====================================================================
 def pedir_alfanumerico(mensaje, valor_actual=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         valor = input(prompt).strip()
 
         if valor == "" and valor_actual is not None:
@@ -68,7 +68,7 @@ def pedir_alfanumerico(mensaje, valor_actual=None):
 # =====================================================================
 def pedir_empresa(mensaje, valor_actual=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         valor = input(prompt).strip()
 
         if valor == "" and valor_actual is not None:
@@ -173,7 +173,7 @@ def pedir_entero(mensaje, valor_actual=None):
 # =====================================================
 def pedir_entero_positivo(mensaje, valor_actual=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         valor = input(prompt).strip()
 
         if valor == "" and valor_actual is not None:
@@ -200,7 +200,7 @@ def pedir_entero_positivo(mensaje, valor_actual=None):
 # =====================================================
 def pedir_capacidad_venue(mensaje, valor_actual=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         valor = input(prompt).strip()
 
         if valor == "" and valor_actual is not None:
@@ -227,7 +227,7 @@ def pedir_capacidad_venue(mensaje, valor_actual=None):
 # =====================================================
 def pedir_aporte_economico(mensaje, valor_actual=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         valor = input(prompt).strip()
 
         if valor == "" and valor_actual is not None:
@@ -254,7 +254,7 @@ def pedir_aporte_economico(mensaje, valor_actual=None):
 # =====================================================================
 def pedir_edad(mensaje, valor_actual=None):
     while True:
-        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else mensaje
+        prompt = f"{mensaje.strip()} ({valor_actual}): " if valor_actual is not None else f"{mensaje.strip()}: "
         valor = input(prompt).strip()
 
         if valor == "" and valor_actual is not None:

@@ -4,9 +4,307 @@
             "id": 1,
             "cedula": "1208876316",
             "nombres": "Fernando Alexander",
-            "apellidos": "Pazmiño Soto",
-            "correo": "fpazminos2@unemi.com",
+            "apellidos": "Gonzalez Soto",
+            "correo": "fernandopazmino22@gmail.com",
             "telefono": "0990205570",
+            "estado": true
+        },
+        {
+            "id": 2,
+            "cedula": "1203218282",
+            "nombres": "Silvana Liliana",
+            "apellidos": "Soto Magallanes",
+            "correo": "silvanasotom@gmail.com",
+            "telefono": "0944507528",
+            "estado": true
+        },
+        {
+            "id": 3,
+            "cedula": "1202494157",
+            "nombres": "Luis Fernando",
+            "apellidos": "Pazmiño Vera",
+            "correo": "lpazmino@gmail.com",
+            "telefono": "0989200353",
+            "estado": true
+        }
+    ],
+    "venues": [
+        {
+            "id": 1,
+            "nombre": "Shopping",
+            "ciudad": "Babahoyo",
+            "direccion": "Garcia Moreno y 9 de Noviembre",
+            "capacidad_maxima": 1500,
+            "estado": true
+        },
+        {
+            "id": 2,
+            "nombre": "City Mall",
+            "ciudad": "Milagro",
+            "direccion": "Av. 5 esquinas",
+            "capacidad_maxima": 2150,
+            "estado": true
+        },
+        {
+            "id": 3,
+            "nombre": "Parque Histórico Guayaquil",
+            "ciudad": "Guayaquil",
+            "direccion": "Av. Río Esmeraldas",
+            "capacidad_maxima": 7000,
+            "estado": true
+        },
+        {
+            "id": 4,
+            "nombre": "Coliseo Jaime Roldós Aguilera",
+            "ciudad": "Babahoyo",
+            "direccion": "Av. 6 de Octubre y la calle Isaías Chopitea",
+            "capacidad_maxima": 4560,
+            "estado": true
+        },
+        {
+            "id": 5,
+            "nombre": "PLAZOLETA",
+            "ciudad": "Guayaquil",
+            "direccion": "9 de Octubre",
+            "capacidad_maxima": 8750,
+            "estado": true
+        }
+    ],
+    "patrocinadores": [
+        {
+            "id": 1,
+            "empresa": "7-Eleven",
+            "telefono": "0959707440",
+            "aporte": 15250,
+            "estado": true
+        },
+        {
+            "id": 2,
+            "empresa": "Chili's",
+            "telefono": "0959204462",
+            "aporte": 27500,
+            "estado": true
+        }
+    ],
+    "asistentes": [
+        {
+            "id": 1,
+            "cedula": "1208876316",
+            "nombres": "Cesar Jacinto",
+            "apellidos": "Soto Peña",
+            "correo": "csotop@gmail.com",
+            "direccion": "Flores y Martin Icaza",
+            "estado": true
+        },
+        {
+            "id": 2,
+            "cedula": "1203218282",
+            "nombres": "Flavio Josueph",
+            "apellidos": "Morales Pluas",
+            "correo": "fmoralesp@gmail.com",
+            "direccion": "Simon Bolivar y Juan Marcos",
+            "estado": true
+        },
+        {
+            "id": 3,
+            "cedula": "1202494157",
+            "nombres": "Freddy Agustin",
+            "apellidos": "Gonzalez Merchan",
+            "correo": "fgonzalez@gmail.com",
+            "direccion": "10 de Agosto y Barreiro",
+            "estado": true
+        }
+    ],
+    "eventos": [
+        {
+            "id": 1,
+            "nombre": "Autocine",
+            "ciudad": "Babahoyo",
+            "fecha": "6/9/2028",
+            "capacidad_maxima": 4560,
+            "organizador_id": 1,
+            "venue_id": 4,
+            "patrocinadores_ids": [
+                1
+            ],
+            "estado": true
+        },
+        {
+            "id": 2,
+            "nombre": "Festival Cultural",
+            "ciudad": "Guayaquil",
+            "fecha": "1/1/2027",
+            "capacidad_maxima": 7000,
+            "organizador_id": 3,
+            "venue_id": 3,
+            "patrocinadores_ids": [
+                1,
+                2
+            ],
+            "estado": false
+        },
+        {
+            "id": 3,
+            "nombre": "Festival Cultural",
+            "ciudad": "Guayaquil",
+            "fecha": "1/1/2027",
+            "capacidad_maxima": 7000,
+            "organizador_id": 3,
+            "venue_id": 3,
+            "patrocinadores_ids": [
+                2
+            ],
+            "estado": true
+        },
+        {
+            "id": 4,
+            "nombre": "Festival deportivo",
+            "ciudad": "Babahoyo",
+            "fecha": "3/9/2027",
+            "capacidad_maxima": 4560,
+            "organizador_id": 1,
+            "venue_id": 4,
+            "patrocinadores_ids": [
+                1
+            ],
+            "estado": false
+        }
+    ],
+    "entradas": [
+        {
+            "id": 1,
+            "codigo": "TICK-1-1",
+            "evento_id": 1,
+            "asistente_id": 2,
+            "precio": 14,
+            "estado": true
+        },
+        {
+            "id": 2,
+            "codigo": "TICK-1-2",
+            "evento_id": 1,
+            "asistente_id": 2,
+            "precio": 14,
+            "estado": true
+        },
+        {
+            "id": 3,
+            "codigo": "TICK-1-3",
+            "evento_id": 1,
+            "asistente_id": 2,
+            "precio": 14,
+            "estado": false
+        },
+        {
+            "id": 4,
+            "codigo": "TICK-1-4",
+            "evento_id": 1,
+            "asistente_id": 2,
+            "precio": 14,
+            "estado": true
+        },
+        {
+            "id": 5,
+            "codigo": "TICK-1-5",
+            "evento_id": 1,
+            "asistente_id": 2,
+            "precio": 14,
+            "estado": true
+        },
+        {
+            "id": 6,
+            "codigo": "TICK-3-6",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 7,
+            "codigo": "TICK-3-7",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 8,
+            "codigo": "TICK-3-8",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 9,
+            "codigo": "TICK-3-9",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 10,
+            "codigo": "TICK-3-10",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 11,
+            "codigo": "TICK-3-11",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 12,
+            "codigo": "TICK-3-12",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 13,
+            "codigo": "TICK-3-13",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 14,
+            "codigo": "TICK-3-14",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 15,
+            "codigo": "TICK-3-15",
+            "evento_id": 3,
+            "asistente_id": 1,
+            "precio": 5,
+            "estado": false
+        },
+        {
+            "id": 16,
+            "codigo": "TICK-3-16",
+            "evento_id": 3,
+            "asistente_id": 3,
+            "precio": 14,
+            "estado": true
+        },
+        {
+            "id": 17,
+            "codigo": "TICK-3-17",
+            "evento_id": 3,
+            "asistente_id": 3,
+            "precio": 14,
             "estado": true
         }
     ]

@@ -275,7 +275,7 @@ class EventoService:
 
         for evento in eventos:
             entradas = self.repo.listar("entradas")
-            total_entradas = sum(entrada["precio"] for entrada in entradas if entrada["evento_id"] == evento["id"] and entrada["estado"])
+            total_entradas = sum(entrada["precio"] for entrada in entradas if entrada["evento_id"] == evento["id"])
 
             patrocinio_total = 0
             for id_pat in evento.get("patrocinadores_ids", []):
@@ -301,7 +301,7 @@ class EventoService:
         opcion = pedir_entero("Seleccione una opción de filtrado")
 
         # Cambiado a False para forzar la lectura completa de db.json en las pruebas
-        eventos = self.repo.listar("eventos", solo_activos=False)
+        eventos = self.repo.listar("eventos")
         if not eventos:
             print("[ℹ INFO] No existen eventos registrados en el sistema.")
             return
