@@ -83,16 +83,16 @@
             "cedula": "1208876316",
             "nombres": "Luis Fernando",
             "apellidos": "Pazmiño Vera",
-            "correo": 24,
-            "direccion": "lpazminov@gmail.com",
+            "correo": "lpazminov@gmail.com",
+            "direccion": "Garcia Moreno y 9 de Noviembre",
             "estado": true
         },
         {
             "id": 2,
             "cedula": "0913303475",
             "nombres": "Fernando Alexander",
-            "apellidos": "Pazmiño  Soto",
-            "correo": "fpazminos2@gmail.ec",
+            "apellidos": "Pazmiño Soto",
+            "correo": "fpazminos2@gmail.com",
             "direccion": "Garcia Moreno y 9 de Noviembre",
             "estado": true
         },
@@ -103,24 +103,6 @@
             "apellidos": "Pazmiño",
             "correo": "fgonzalez6@gmail.com",
             "direccion": "Flores",
-            "estado": true
-        },
-        {
-            "id": 4,
-            "cedula": "1208911444",
-            "nombres": "Emily Fiorella",
-            "apellidos": "Pazmiño Soto",
-            "correo": "epazminos@gmail.com",
-            "direccion": "5 esquina",
-            "estado": true
-        },
-        {
-            "id": 5,
-            "cedula": "0959420670",
-            "nombres": "Julio Vera España",
-            "apellidos": "Garcia Discriminador",
-            "correo": "alexpc@unemi.ex.edu",
-            "direccion": "Cooperativa los olvid4dos de Jesucristo",
             "estado": true
         }
     ],

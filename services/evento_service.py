@@ -187,16 +187,20 @@ class EventoService:
         # 2. Modificación de la Fecha (Cumpliendo la regla cronológica de 2026+)
         nueva_fecha = pedir_fecha("Fecha nueva", valor_actual=evento['fecha'])
 
-        # Preparamos los datos manteniendo la Ciudad y el Estado intactos
+        # Preparamos los datos MANTENIENDO todas las relaciones estructurales intactas
         nuevos_datos = {
             "nombre": nuevo_nombre,
-            "ciudad": evento["ciudad"],  # Se conserva el valor estructural original
+            "ciudad": evento["ciudad"],  
             "fecha": nueva_fecha,
+            "capacidad_maxima": evento["capacidad_maxima"],
+            "organizador_id": evento["organizador_id"],
+            "venue_id": evento["venue_id"],
+            "patrocinadores_ids": evento["patrocinadores_ids"],
             "estado": True
         }
 
         self.repo.actualizar("eventos", id_evento, nuevos_datos)
-        print("[✔ ÉXITO] Evento modificado correctamente.")
+        print("[✔ ÉXITO] Evento modificado manteniendo de forma consistente sus relaciones.")
 
     # =====================================================================
     # D - ELIMINAR (Eliminar Evento Lógico)

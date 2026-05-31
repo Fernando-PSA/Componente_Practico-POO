@@ -38,6 +38,7 @@ class EntradaService:
             
         print("\n--- ASISTENTES DISPONIBLES ---")
         for asis in asistentes:
+            # Usamos 'nombres' y 'apellidos' tal como están en tu db.json y modelo
             print(f"ID: {asis['id']} | Nombre: {asis['nombres']} {asis['apellidos']} | Cédula: {asis['cedula']}")
             
         id_asistente = pedir_entero("Seleccione el ID del asistente: ")
