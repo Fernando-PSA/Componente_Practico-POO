@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 # =====================================================================
 # FUNCIÓN AUXILIAR DE CONTROL
@@ -32,6 +33,14 @@ def pedir_solo_letras(mensaje, valor_actual=None, permitir_vacio=False):
         # Validación para verificar que sean solo letras y espacios
         if not valor.replace(" ", "").isalpha():
             print("[❌ ERROR] Entrada inválida. Solo se permiten letras.")
+            continue
+
+        # [V-05] Longitud mínima y máxima para nombres, apellidos y ciudades
+        if len(valor) < 2:
+            print("[❌ ERROR] El texto debe tener al menos 2 caracteres.")
+            continue
+        if len(valor) > 100:
+            print("[❌ ERROR] El texto no puede exceder los 100 caracteres.")
             continue
 
         return valor
@@ -113,6 +122,11 @@ def pedir_telefono(mensaje, valor_actual=None):
             print("[❌ ERROR] El teléfono debe tener exactamente 10 dígitos.")
             continue
 
+        # [V-02] Valida que el número celular ecuatoriano inicie con '09' (Claro, Movistar, CNT)
+        if not telefono.startswith("09"):
+            print("[❌ ERROR] El número celular debe iniciar con '09' (ej: 0991234567).")
+            continue
+
         return telefono
 
 
@@ -138,7 +152,8 @@ def pedir_correo(mensaje, valor_actual=None, repo=None, coleccion=None, id_regis
             continue
 
         if repo and coleccion:
-            existente = repo.buscar_por_campo(coleccion, "correo", correo)
+            # [V-03] Busca en TODOS los registros (activos e inactivos) para evitar duplicados lógicos
+            existente = repo.buscar_por_campo(coleccion, "correo", correo, solo_activos=False)
             if existente and (id_registro is None or existente.get("id") != id_registro):
                 print(f"[❌ ERROR] El correo '{correo}' ya está registrado por otro usuario.")
                 continue
@@ -313,6 +328,13 @@ def pedir_fecha(mensaje, valor_actual=None):
 
         if anio < 2026:
             print("[❌ ERROR] El año ingresado debe ser 2026 o superior.")
+            continue
+
+        # [V-01] Verifica que la fecha exista realmente en el calendario (rechaza 31/02, 31/04, 29/02 en año no bisiesto, etc.)
+        try:
+            datetime(anio, mes, dia)
+        except ValueError:
+            print("[❌ ERROR] La fecha no existe en el calendario (ej: 31/02/2026 o 31/04/2026 son inválidas).")
             continue
 
         return fecha

@@ -3,8 +3,8 @@
         {
             "id": 1,
             "cedula": "1208876316",
-            "nombres": "Fernando Alexander",
-            "apellidos": "Gonzalez Soto",
+            "nombres": "carlos",
+            "apellidos": "vera",
             "correo": "fernandopazmino22@gmail.com",
             "telefono": "0990205570",
             "estado": true
@@ -25,6 +25,15 @@
             "apellidos": "Pazmiño Vera",
             "correo": "lpazmino@gmail.com",
             "telefono": "0989200353",
+            "estado": true
+        },
+        {
+            "id": 4,
+            "cedula": "1727408971",
+            "nombres": "a",
+            "apellidos": "rodri",
+            "correo": "1@gmail.com",
+            "telefono": "1111111111",
             "estado": true
         }
     ],
@@ -305,6 +314,22 @@
             "evento_id": 3,
             "asistente_id": 3,
             "precio": 14,
+            "estado": true
+        },
+        {
+            "id": 18,
+            "codigo": "TICK-1-18",
+            "evento_id": 1,
+            "asistente_id": 2,
+            "precio": 3,
+            "estado": true
+        },
+        {
+            "id": 19,
+            "codigo": "TICK-1-19",
+            "evento_id": 1,
+            "asistente_id": 2,
+            "precio": 3,
             "estado": true
         }
     ]

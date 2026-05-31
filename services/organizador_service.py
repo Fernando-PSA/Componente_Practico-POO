@@ -145,6 +145,12 @@ class OrganizadorService:
                     print("[❌ ERROR] No se puede eliminar este organizador porque tiene eventos activos asignados.")
                     return
 
+            # [L-12] Confirmación explícita antes de ejecutar la eliminación lógica
+            confirmacion = input(f"¿Confirma eliminar al organizador '{organizador['nombres']} {organizador['apellidos']}'? (s/n): ").strip().lower()
+            if confirmacion != "s":
+                print("[ℹ INFO] Operación cancelada por el usuario.")
+                return
+
             eliminado = self.repo.eliminar_logico("organizadores", id_organizador)
 
             if eliminado:

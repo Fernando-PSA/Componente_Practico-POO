@@ -138,12 +138,20 @@ class AsistenteService:
                 print("Por favor, intente con otro ID de la lista.\n")
                 continue
 
-            entradas = self.repo.listar("entradas")
+            # [L-11] Incluye historial completo (activas e inactivas) para preservar la integridad
+            #         referencial: una entrada huérfana sin asistente rompería los reportes históricos
+            entradas = self.repo.listar("entradas", solo_activos=False)
 
             for entrada in entradas:
                 if entrada["asistente_id"] == id_asistente:
-                    print("[❌ ERROR] No se puede eliminar este asistente porque tiene entradas activas registradas.")
+                    print("[❌ ERROR] No se puede eliminar este asistente porque tiene historial de entradas registradas (activas o canceladas).")
                     return
+
+            # [L-12] Confirmación explícita antes de ejecutar la eliminación lógica
+            confirmacion = input(f"¿Confirma eliminar al asistente '{asistente['nombres']} {asistente['apellidos']}'? (s/n): ").strip().lower()
+            if confirmacion != "s":
+                print("[ℹ INFO] Operación cancelada por el usuario.")
+                return
 
             eliminado = self.repo.eliminar_logico("asistentes", id_asistente)
 
